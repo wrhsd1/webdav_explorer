@@ -1,0 +1,28 @@
+# PHP WebDAV 管理系统 - 简化安全配置
+
+# 保护配置文件
+<Files ".env">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# 保护备份文件
+<Files "*.bak">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# 保护日志文件
+<Files "*.log">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# 防止目录浏览
+Options -Indexes
+
+# 设置默认首页
+DirectoryIndex index.php
+
+# 隐藏服务器版本信息（可选）
+ServerSignature Off
