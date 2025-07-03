@@ -133,14 +133,6 @@ try {
     $items = [];
 }
 
-// 获取存储空间信息
-$storageInfo = null;
-try {
-    $storageInfo = $webdav->getStorageInfo($currentPath);
-} catch (Exception $e) {
-    // 忽略存储信息获取错误
-}
-
 // 构建面包屑导航
 $pathParts = array_filter(explode('/', $currentPath));
 $breadcrumbs = [];
@@ -237,53 +229,6 @@ function isPreviewable($filename) {
             display: flex;
             gap: 1rem;
             align-items: center;
-        }
-        
-        .storage-info {
-            background: #e6fffa;
-            border: 1px solid #38b2ac;
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-            margin: 1rem 0;
-            font-size: 0.875rem;
-        }
-        
-        .storage-bar {
-            background: #e2e8f0;
-            border-radius: 1rem;
-            height: 0.5rem;
-            margin: 0.5rem 0;
-            overflow: hidden;
-        }
-        
-        .storage-bar-fill {
-            background: linear-gradient(90deg, #48bb78, #38a169);
-            height: 100%;
-            transition: width 0.3s ease;
-            border-radius: 1rem;
-        }
-        
-        .storage-bar-fill.warning {
-            background: linear-gradient(90deg, #ed8936, #dd6b20);
-        }
-        
-        .storage-bar-fill.danger {
-            background: linear-gradient(90deg, #f56565, #e53e3e);
-        }
-        
-        .storage-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-            color: #4a5568;
-        }
-        
-        .storage-info.unavailable {
-            background: #fed7d7;
-            border-color: #fc8181;
-            color: #742a2a;
         }
         
         .btn {
@@ -704,98 +649,6 @@ function isPreviewable($filename) {
     </div>
 
     <div class="container">
-        <?php if ($storageInfo): ?>
-            <?php if ($storageInfo['supported'] && ($storageInfo['quota_total'] > 0 || $storageInfo['quota_used'] > 0)): ?>
-                <div class="storage-info">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span>💾</span>
-                            <strong>存储空间</strong>
-                            <?php if (isset($storageInfo['method'])): ?>
-                                <span style="font-size: 0.75rem; color: #718096;">(<?php echo htmlspecialchars($storageInfo['method']); ?>)</span>
-                            <?php endif; ?>
-                        </div>
-                        <button id="refreshStorageBtn" onclick="refreshStorageInfo()" 
-                                style="background: none; border: 1px solid #38b2ac; color: #38b2ac; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem;">
-                            🔄 刷新
-                        </button>
-                    </div>
-                    
-                    <?php if ($storageInfo['quota_total']): ?>
-                        <?php 
-                            $usedPercent = $storageInfo['quota_used'] && $storageInfo['quota_total'] 
-                                ? ($storageInfo['quota_used'] / $storageInfo['quota_total']) * 100 
-                                : 0;
-                            $barClass = '';
-                            if ($usedPercent >= 90) $barClass = 'danger';
-                            elseif ($usedPercent >= 75) $barClass = 'warning';
-                        ?>
-                        
-                        <div class="storage-bar">
-                            <div class="storage-bar-fill <?php echo $barClass; ?>" 
-                                 style="width: <?php echo min($usedPercent, 100); ?>%"></div>
-                        </div>
-                        
-                        <div class="storage-details">
-                            <span>
-                                已使用: <?php echo formatFileSize($storageInfo['quota_used'] ?? 0); ?>
-                                / <?php echo formatFileSize($storageInfo['quota_total']); ?>
-                            </span>
-                            <span>
-                                可用: <?php echo formatFileSize($storageInfo['quota_available'] ?? 0); ?>
-                                (<?php echo number_format(100 - $usedPercent, 1); ?>%)
-                            </span>
-                        </div>
-                    <?php else: ?>
-                        <div style="margin-top: 0.5rem; color: #4a5568;">
-                            <?php if ($storageInfo['quota_used']): ?>
-                                已使用: <?php echo formatFileSize($storageInfo['quota_used']); ?>
-                            <?php endif; ?>
-                            <?php if ($storageInfo['quota_available']): ?>
-                                可用: <?php echo formatFileSize($storageInfo['quota_available']); ?>
-                            <?php endif; ?>
-                            <?php if (!$storageInfo['quota_used'] && !$storageInfo['quota_available']): ?>
-                                存储配额信息部分可用
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php elseif ($storageInfo['supported'] && isset($storageInfo['method']) && $storageInfo['method'] === 'estimate'): ?>
-                <div class="storage-info" style="background: #fff5e6; border-color: #ed8936;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span>📊</span>
-                            <strong>存储估算</strong>
-                            <span style="font-size: 0.75rem; color: #718096;">(文件扫描)</span>
-                        </div>
-                        <button id="refreshStorageBtn" onclick="refreshStorageInfo()" 
-                                style="background: none; border: 1px solid #ed8936; color: #ed8936; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem;">
-                            🔄 刷新
-                        </button>
-                    </div>
-                    <div style="margin-top: 0.5rem; color: #4a5568;">
-                        <?php if ($storageInfo['quota_used']): ?>
-                            当前目录使用: <?php echo formatFileSize($storageInfo['quota_used']); ?>
-                        <?php endif; ?>
-                        <div style="font-size: 0.75rem; color: #718096; margin-top: 0.25rem;">
-                            <?php echo htmlspecialchars($storageInfo['message']); ?>
-                        </div>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="storage-info unavailable">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span>⚠️</span>
-                        <span><?php echo htmlspecialchars($storageInfo['message']); ?></span>
-                        <button onclick="document.querySelector('.storage-info').style.display='none'" 
-                                style="background: none; border: none; color: #742a2a; cursor: pointer; margin-left: auto;">
-                            ✕
-                        </button>
-                    </div>
-                </div>
-            <?php endif; ?>
-        <?php endif; ?>
-        
         <?php if ($message): ?>
             <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
         <?php endif; ?>
@@ -1234,90 +1087,6 @@ function isPreviewable($filename) {
                     modal.style.display = 'none';
                 });
             }
-        });
-
-        // 存储信息刷新功能
-        function refreshStorageInfo() {
-            const storageInfo = document.querySelector('.storage-info');
-            if (!storageInfo) return;
-            
-            const refreshBtn = document.getElementById('refreshStorageBtn');
-            if (refreshBtn) {
-                refreshBtn.textContent = '刷新中...';
-                refreshBtn.disabled = true;
-            }
-            
-            const accountKey = new URLSearchParams(window.location.search).get('account');
-            const currentPath = new URLSearchParams(window.location.search).get('path') || '/';
-            
-            fetch(`api/storage_info.php?account=${encodeURIComponent(accountKey)}&path=${encodeURIComponent(currentPath)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data.supported) {
-                        updateStorageDisplay(data.data);
-                    } else {
-                        showStorageError(data.message || '无法获取存储信息');
-                    }
-                })
-                .catch(error => {
-                    console.error('刷新存储信息失败:', error);
-                    showStorageError('刷新存储信息失败');
-                })
-                .finally(() => {
-                    if (refreshBtn) {
-                        refreshBtn.textContent = '🔄 刷新';
-                        refreshBtn.disabled = false;
-                    }
-                });
-        }
-        
-        function updateStorageDisplay(storageData) {
-            const storageInfo = document.querySelector('.storage-info');
-            if (!storageInfo || !storageData.quota_total) return;
-            
-            const usagePercent = storageData.usage_percent || 0;
-            let barClass = '';
-            if (usagePercent >= 90) barClass = 'danger';
-            else if (usagePercent >= 75) barClass = 'warning';
-            
-            const storageBar = storageInfo.querySelector('.storage-bar-fill');
-            if (storageBar) {
-                storageBar.style.width = Math.min(usagePercent, 100) + '%';
-                storageBar.className = `storage-bar-fill ${barClass}`;
-            }
-            
-            const storageDetails = storageInfo.querySelector('.storage-details');
-            if (storageDetails) {
-                storageDetails.innerHTML = `
-                    <span>
-                        已使用: ${storageData.quota_used_formatted || '0 B'} 
-                        / ${storageData.quota_total_formatted || 'N/A'}
-                    </span>
-                    <span>
-                        可用: ${storageData.quota_available_formatted || '0 B'} 
-                        (${(100 - usagePercent).toFixed(1)}%)
-                    </span>
-                `;
-            }
-        }
-        
-        function showStorageError(message) {
-            const storageInfo = document.querySelector('.storage-info');
-            if (storageInfo) {
-                storageInfo.className = 'storage-info unavailable';
-                storageInfo.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span>⚠️</span>
-                        <span>${escapeHtml(message)}</span>
-                    </div>
-                `;
-            }
-        }
-        
-        // 页面加载完成后设置定时刷新
-        document.addEventListener('DOMContentLoaded', function() {
-            // 每5分钟自动刷新一次存储信息
-            setInterval(refreshStorageInfo, 5 * 60 * 1000);
         });
     </script>
 </body>

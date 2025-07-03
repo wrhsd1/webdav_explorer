@@ -1,0 +1,6 @@
+# 禁止访问templates目录中的所有文件
+Order Deny,Allow
+Deny from all
+
+# 防止目录浏览
+Options -Indexes
