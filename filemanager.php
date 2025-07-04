@@ -608,6 +608,7 @@ function isPreviewable($filename) {
             width: 90%;
             max-width: 500px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
         }
         
         .modal-header {
@@ -707,18 +708,44 @@ function isPreviewable($filename) {
         
         /* 移动端预览优化 */
         @media (max-width: 768px) {
-            .preview-modal .modal-content {
-                margin: 2% auto;
+            .modal.modal-show {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1000;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
                 padding: 1rem;
-                max-width: 95vw;
-                max-height: 95vh;
-                border-radius: 12px;
+                box-sizing: border-box;
+            }
+            
+            .modal-content {
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
+                max-height: 90vh;
+                border-radius: 16px;
+                overflow-y: auto;
+                box-sizing: border-box;
+                position: relative;
+                padding: 1.5rem;
+            }
+            
+            .preview-modal .modal-content {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                max-height: 90vh;
             }
             
             .modal-header {
                 margin-bottom: 1rem;
                 flex-wrap: wrap;
                 gap: 0.5rem;
+                flex-shrink: 0;
             }
             
             .modal-header h3 {
@@ -740,14 +767,27 @@ function isPreviewable($filename) {
                 font-size: 0.75rem;
             }
             
+            .preview-content {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: auto;
+                min-height: 0;
+                text-align: center;
+            }
+            
             .preview-content img {
                 max-height: 60vh;
+                max-width: 100%;
                 width: auto;
                 height: auto;
+                object-fit: contain;
             }
             
             .preview-content video {
                 max-height: 50vh;
+                max-width: 100%;
                 width: 100%;
             }
             
@@ -761,11 +801,15 @@ function isPreviewable($filename) {
                 font-size: 0.8rem;
                 max-height: 50vh;
                 line-height: 1.4;
+                text-align: left;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             .preview-content iframe {
                 height: 60vh !important;
                 width: 100% !important;
+                max-width: 100%;
             }
             
             .close {
@@ -777,15 +821,18 @@ function isPreviewable($filename) {
         
         /* 超小屏幕优化 */
         @media (max-width: 480px) {
+            .modal.modal-show {
+                padding: 0.5rem;
+            }
+            
             .preview-modal .modal-content {
-                margin: 1% auto;
                 padding: 0.75rem;
-                max-width: 98vw;
-                max-height: 98vh;
+                border-radius: 12px;
             }
             
             .modal-header {
                 margin-bottom: 0.75rem;
+                flex-wrap: wrap;
             }
             
             .modal-header h3 {
@@ -808,6 +855,7 @@ function isPreviewable($filename) {
             .preview-content pre {
                 font-size: 0.75rem;
                 max-height: 45vh;
+                padding: 0.5rem;
             }
             
             .preview-content iframe {
@@ -1067,138 +1115,432 @@ function isPreviewable($filename) {
             }
         }
         
+        /* 移动端卡片式布局 */
+        .mobile-card-layout {
+            display: none;
+        }
+        
+        .file-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .file-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+        }
+        
+        .file-card.selected {
+            border-color: #3182ce;
+            background: #f0f8ff;
+        }
+        
+        .file-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-card-icon {
+            font-size: 2rem;
+            min-width: 3rem;
+            text-align: center;
+        }
+        
+        .file-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .file-card-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1rem;
+            line-height: 1.3;
+            margin-bottom: 0.25rem;
+            word-break: break-word;
+        }
+        
+        .file-card-meta {
+            display: flex;
+            gap: 1rem;
+            color: #718096;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
+        }
+        
+        .file-card-select {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: none; /* 默认隐藏 */
+        }
+        
+        .file-card-select:checked {
+            background: #3182ce;
+            border-color: #3182ce;
+        }
+        
+        .file-card-select:checked::after {
+            content: '✓';
+            color: white;
+            font-size: 0.75rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .file-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        .file-card-actions .btn {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+        }
+        
+        /* 底部固定操作栏 */
+        .mobile-bottom-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            z-index: 200;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-bottom-bar.show {
+            display: block;
+        }
+        
+        .mobile-bottom-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-around;
+        }
+        
+        .mobile-bottom-actions .btn {
+            flex: 1;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            min-height: 3rem;
+        }
+        
+        .mobile-bottom-actions .btn span {
+            font-size: 1.2rem;
+        }
+        
+
+        
+        /* 快速操作浮动按钮 */
+        .mobile-fab {
+            position: fixed;
+            bottom: 5rem;
+            right: 1rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: #3182ce;
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.4);
+            cursor: pointer;
+            z-index: 150;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .mobile-fab:active {
+            transform: scale(0.95);
+        }
+        
+        .mobile-fab.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         @media (max-width: 768px) {
+            body {
+                padding-bottom: 5rem; /* 为底部操作栏留空间 */
+            }
+            
             .container {
-                padding: 1rem;
+                padding: 0.75rem;
             }
             
             .header {
-                padding: 0.75rem 1rem;
-                flex-direction: column;
-                gap: 0.5rem;
-                align-items: stretch;
+                padding: 1rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 0 0 1rem 1rem;
+                margin-bottom: 1rem;
             }
             
             .header h1 {
-                font-size: 1.25rem;
+                font-size: 1.3rem;
                 text-align: center;
+                color: white;
             }
             
             .header-actions {
                 justify-content: center;
-                flex-wrap: wrap;
-                gap: 0.5rem;
+                margin-top: 0.75rem;
             }
             
             .header-actions span {
-                order: -1;
-                width: 100%;
-                text-align: center;
-                font-size: 0.8rem;
+                background: rgba(255,255,255,0.2);
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                backdrop-filter: blur(10px);
+            }
+            
+            .header-actions .btn {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 1px solid rgba(255,255,255,0.3);
+                backdrop-filter: blur(10px);
+                margin-top: 0.5rem;
             }
             
             .toolbar {
+                background: white;
+                border-radius: 12px;
                 padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             }
             
             .toolbar-top {
                 flex-direction: column;
-                align-items: stretch;
-                gap: 0.75rem;
+                gap: 1rem;
             }
             
             .breadcrumb {
-                min-width: auto;
+                background: #f8fafc;
+                padding: 0.75rem;
+                border-radius: 8px;
                 overflow-x: auto;
-                padding-bottom: 0.25rem;
+                white-space: nowrap;
             }
             
             .breadcrumb::-webkit-scrollbar {
-                height: 2px;
+                height: 3px;
             }
             
             .breadcrumb::-webkit-scrollbar-track {
                 background: #f1f1f1;
-                border-radius: 2px;
+                border-radius: 3px;
             }
             
             .breadcrumb::-webkit-scrollbar-thumb {
-                background: #888;
-                border-radius: 2px;
+                background: #cbd5e0;
+                border-radius: 3px;
             }
             
             .search-box {
-                min-width: auto;
-                width: 100%;
+                border-radius: 12px;
+                padding: 0.75rem;
+                background: #f8fafc;
+                border: 2px solid #e2e8f0;
+                transition: border-color 0.2s;
             }
             
-            .toolbar-actions {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-                justify-content: center;
+            .search-box:focus-within {
+                border-color: #3182ce;
+                background: white;
             }
             
-            .toolbar-actions .btn,
-            .toolbar-actions .file-input-label {
-                flex: 1;
-                min-width: calc(50% - 0.25rem);
-                justify-content: center;
-                font-size: 0.8rem;
-                padding: 0.5rem 0.75rem;
+            .search-box input {
+                font-size: 1rem;
             }
             
-            .file-list-header, .file-list-item {
-                grid-template-columns: 30px 1fr 60px;
-                gap: 0.5rem;
-                padding: 0.5rem;
-            }
-            
-            .file-list-header {
-                font-size: 0.8rem;
-            }
-            
-            .file-size-cell, .file-type-cell, .file-date-cell {
+            /* 隐藏桌面版文件列表，显示移动版卡片 */
+            .file-list {
                 display: none;
             }
             
-            .file-icon-small {
-                font-size: 1.25rem;
+            .mobile-card-layout {
+                display: block;
             }
             
-            .file-name-cell {
-                gap: 0.5rem;
-                min-width: 0;
-            }
-            
-            .file-actions-cell {
-                flex-direction: column;
-                gap: 0.25rem;
-                align-items: center;
-            }
-            
-            .file-actions-cell .btn {
-                padding: 0.25rem;
-                font-size: 0.75rem;
-                min-width: 32px;
-                height: 32px;
-                border-radius: 4px;
+            .toolbar-actions {
+                display: none; /* 隐藏工具栏操作，使用底部栏 */
             }
             
             .bulk-actions {
-                padding: 0.75rem;
-                flex-wrap: wrap;
-                gap: 0.5rem;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                border-top: 1px solid #e2e8f0;
+                padding: 1rem;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                z-index: 200;
+                border-radius: 1rem 1rem 0 0;
             }
             
             .bulk-actions .btn {
+                font-size: 0.9rem;
+                padding: 0.75rem 1rem;
+                border-radius: 8px;
+                margin: 0 0.25rem;
+            }
+            
+            .mobile-fab.show {
+                display: flex;
+            }
+            
+            .mobile-bottom-bar.show {
+                display: block;
+            }
+            
+
+            
+            .modal-header h3 {
+                font-size: 1.2rem;
+                color: #2d3748;
+            }
+            
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 1rem;
+                font-size: 1rem;
+                border-radius: 8px;
+                border: 2px solid #e2e8f0;
+            }
+            
+            .form-group input:focus,
+            .form-group select:focus,
+            .form-group textarea:focus {
+                border-color: #3182ce;
+            }
+            
+            .modal-actions {
+                gap: 0.75rem;
+                margin-top: 2rem;
+            }
+            
+            .modal-actions .btn {
+                flex: 1;
+                padding: 1rem;
+                font-size: 1rem;
+                border-radius: 8px;
+                font-weight: 600;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .toolbar {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .breadcrumb {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .search-box {
+                padding: 0.625rem;
+            }
+            
+            .file-card {
+                padding: 0.75rem;
+                margin-bottom: 0.5rem;
+                border-radius: 10px;
+            }
+            
+            .file-card-icon {
+                font-size: 1.75rem;
+                min-width: 2.5rem;
+            }
+            
+            .file-card-name {
+                font-size: 0.95rem;
+            }
+            
+            .file-card-meta {
                 font-size: 0.75rem;
-                padding: 0.375rem 0.75rem;
+            }
+            
+            .file-card-actions .btn {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+            
+            .mobile-fab {
+                width: 3rem;
+                height: 3rem;
+                font-size: 1.25rem;
+                bottom: 4.5rem;
+            }
+            
+            .mobile-bottom-bar {
+                padding: 0.5rem;
+            }
+            
+            .mobile-bottom-actions .btn {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.7rem;
+                min-height: 2.5rem;
+            }
+            
+            .mobile-bottom-actions .btn span {
+                font-size: 1rem;
             }
             
             .modal-content {
-                margin: 3% auto;
-                padding: 1.25rem;
-                max-width: 95vw;
+                padding: 1rem;
+                border-radius: 12px;
             }
             
             .modal-header h3 {
@@ -1208,59 +1550,13 @@ function isPreviewable($filename) {
             .form-group input,
             .form-group select,
             .form-group textarea {
-                padding: 0.625rem;
-                font-size: 0.9rem;
-            }
-            
-            .modal-actions {
-                gap: 0.5rem;
-                flex-wrap: wrap;
+                padding: 0.75rem;
+                font-size: 0.95rem;
             }
             
             .modal-actions .btn {
-                flex: 1;
-                min-width: calc(50% - 0.25rem);
-                justify-content: center;
-            }
-        }
-        
-        /* 超小屏幕优化 */
-        @media (max-width: 480px) {
-            .header {
-                padding: 0.5rem;
-            }
-            
-            .header h1 {
-                font-size: 1.1rem;
-            }
-            
-            .container {
                 padding: 0.75rem;
-            }
-            
-            .toolbar {
-                padding: 0.75rem;
-            }
-            
-            .toolbar-actions .btn,
-            .toolbar-actions .file-input-label {
-                min-width: 100%;
-                margin-bottom: 0.25rem;
-            }
-            
-            .file-list-header, .file-list-item {
-                grid-template-columns: 25px 1fr 50px;
-                padding: 0.375rem;
-            }
-            
-            .file-icon-small {
-                font-size: 1rem;
-            }
-            
-            .file-actions-cell .btn {
-                min-width: 28px;
-                height: 28px;
-                font-size: 0.7rem;
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -1441,8 +1737,125 @@ function isPreviewable($filename) {
                     </div>
                 <?php endforeach; ?>
             </div>
+            
+            <!-- 移动端卡片式布局 -->
+            <div class="mobile-card-layout">
+                <?php foreach ($items as $item): ?>
+                    <div class="file-card" data-name="<?php echo strtolower(htmlspecialchars($item['name'])); ?>" data-path="<?php echo htmlspecialchars($item['path']); ?>">
+                        <input type="checkbox" class="file-card-select" value="<?php echo htmlspecialchars($item['path']); ?>" onchange="updateMobileSelection(this)">
+                        
+                        <div class="file-card-header">
+                            <div class="file-card-icon">
+                                <?php
+                                $icons = [
+                                    'directory' => '📁',
+                                    'image' => '🖼️',
+                                    'video' => '🎬',
+                                    'audio' => '🎵',
+                                    'document' => '📄',
+                                    'archive' => '📦',
+                                    'code' => '💻',
+                                    'text' => '📝',
+                                    'file' => '📄'
+                                ];
+                                echo $icons[$item['type']] ?? '📄';
+                                ?>
+                            </div>
+                            <div class="file-card-info">
+                                <div class="file-card-name">
+                                    <?php if ($item['is_dir']): ?>
+                                        <a href="?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($item['path']); ?>" style="color: inherit; text-decoration: none;">
+                                            <?php echo htmlspecialchars($item['name']); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <?php if (isPreviewable($item['name'])): ?>
+                                            <span onclick="previewFile('<?php echo htmlspecialchars($item['path']); ?>', '<?php echo htmlspecialchars($item['name']); ?>')" style="cursor: pointer;">
+                                                <?php echo htmlspecialchars($item['name']); ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <?php echo htmlspecialchars($item['name']); ?>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="file-card-meta">
+                                    <?php if (!$item['is_dir']): ?>
+                                        <span>📊 <?php echo formatFileSize($item['size']); ?></span>
+                                    <?php endif; ?>
+                                    <span>📅 <?php echo formatDateTime($item['modified']); ?></span>
+                                    <?php if (!$item['is_dir']): ?>
+                                        <span>📎 <?php echo getFileExtension($item['name']); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-card-actions">
+                            <?php if ($item['is_dir']): ?>
+                                <a href="?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($item['path']); ?>" 
+                                   class="btn btn-primary">
+                                    <span>📂</span> 打开
+                                </a>
+                            <?php else: ?>
+                                <?php if (isPreviewable($item['name'])): ?>
+                                    <button onclick="previewFile('<?php echo htmlspecialchars($item['path']); ?>', '<?php echo htmlspecialchars($item['name']); ?>')" 
+                                            class="btn btn-info">
+                                        <span>👁️</span> 预览
+                                    </button>
+                                <?php endif; ?>
+                                <a href="download.php?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($item['path']); ?>" 
+                                   class="btn btn-success">
+                                    <span>⬇️</span> 下载
+                                </a>
+                                <a href="direct.php?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($item['path']); ?>" 
+                                   class="btn btn-warning" target="_blank">
+                                    <span>🔗</span> 直链
+                                </a>
+                            <?php endif; ?>
+                            <button onclick="showRenameModal('<?php echo htmlspecialchars($item['path']); ?>', '<?php echo htmlspecialchars($item['name']); ?>')" 
+                                    class="btn btn-secondary">
+                                <span>✏️</span> 重命名
+                            </button>
+                            <button onclick="deleteItem('<?php echo htmlspecialchars($item['path']); ?>', '<?php echo htmlspecialchars($item['name']); ?>')" 
+                                    class="btn btn-danger">
+                                <span>🗑️</span> 删除
+                            </button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         <?php endif; ?>
     </div>
+
+    <!-- 移动端底部操作栏 -->
+    <div class="mobile-bottom-bar" id="mobileBottomBar">
+        <div class="mobile-bottom-actions">
+            <label for="mobile-file-upload" class="btn btn-success">
+                <span>📤</span>
+                <small>上传</small>
+            </label>
+            <input type="file" id="mobile-file-upload" style="display: none;" onchange="handleMobileUpload(this)">
+            
+            <button onclick="showModal('createFolderModal')" class="btn btn-primary">
+                <span>📁</span>
+                <small>新建</small>
+            </button>
+            
+            <button onclick="showModal('uploadUrlModal')" class="btn btn-info">
+                <span>🔗</span>
+                <small>URL</small>
+            </button>
+            
+            <button onclick="toggleMobileSelectMode()" class="btn btn-secondary" id="mobileSelectBtn">
+                <span>☑️</span>
+                <small>选择</small>
+            </button>
+        </div>
+    </div>
+
+    <!-- 移动端快速操作浮动按钮 -->
+    <button class="mobile-fab" id="mobileFab" onclick="scrollToTop()">
+        ⬆️
+    </button>
 
     <!-- 新建文件夹模态框 -->
     <div id="createFolderModal" class="modal">
@@ -1549,11 +1962,18 @@ function isPreviewable($filename) {
         let isPreviewMinimized = false;
 
         function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'block';
+            // 为移动端添加特殊类名以启用flex布局
+            if (window.innerWidth <= 768) {
+                modal.classList.add('modal-show');
+            }
         }
 
         function hideModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+            modal.classList.remove('modal-show');
             if (modalId === 'previewModal') {
                 hideFloatingPreview();
                 currentPreviewFile = null;
@@ -1751,6 +2171,10 @@ function isPreviewable($filename) {
             setTimeout(() => {
                 hideFloatingPreview();
                 modal.style.display = 'block';
+                // 为移动端添加特殊类名
+                if (window.innerWidth <= 768) {
+                    modal.classList.add('modal-show');
+                }
                 modal.classList.remove('minimized');
                 modal.classList.add('restored');
                 isPreviewMinimized = false;
@@ -1851,7 +2275,7 @@ function isPreviewable($filename) {
             const modals = document.querySelectorAll('.modal');
             modals.forEach(modal => {
                 if (event.target === modal && modal.id !== 'previewModal') {
-                    modal.style.display = 'none';
+                    hideModal(modal.id);
                 }
             });
             
@@ -1898,7 +2322,7 @@ function isPreviewable($filename) {
                             // 音视频文件按ESC收起而不是关闭
                             minimizePreview();
                         } else {
-                            modal.style.display = 'none';
+                            hideModal(modal.id);
                         }
                     });
                 }
@@ -2071,9 +2495,263 @@ function isPreviewable($filename) {
             }
         }
 
+        // 移动端选择模式
+        let isMobileSelectMode = false;
+        function toggleMobileSelectMode() {
+            isMobileSelectMode = !isMobileSelectMode;
+            const selectBtn = document.getElementById('mobileSelectBtn');
+            const cards = document.querySelectorAll('.file-card');
+            
+            if (isMobileSelectMode) {
+                selectBtn.classList.add('btn-warning');
+                selectBtn.innerHTML = '<span>✕</span><small>取消</small>';
+                cards.forEach(card => {
+                    card.style.paddingTop = '3rem'; // 为选择框留出空间
+                    const checkbox = card.querySelector('.file-card-select');
+                    checkbox.style.display = 'block';
+                });
+                
+                // 显示批量操作栏
+                const bulkActions = document.getElementById('bulkActions');
+                if (bulkActions) {
+                    bulkActions.classList.add('show');
+                }
+            } else {
+                selectBtn.classList.remove('btn-warning');
+                selectBtn.innerHTML = '<span>☑️</span><small>选择</small>';
+                cards.forEach(card => {
+                    card.style.paddingTop = '1rem';
+                    const checkbox = card.querySelector('.file-card-select');
+                    checkbox.style.display = 'none';
+                    checkbox.checked = false;
+                });
+                
+                // 隐藏批量操作栏
+                clearSelection();
+            }
+        }
+        
+        // 更新移动端选择状态
+        function updateMobileSelection(checkbox) {
+            const card = checkbox.closest('.file-card');
+            if (checkbox.checked) {
+                card.classList.add('selected');
+                selectedFiles.add(checkbox.value);
+            } else {
+                card.classList.remove('selected');
+                selectedFiles.delete(checkbox.value);
+            }
+            updateSelection();
+        }
+        
+        // 处理移动端文件上传
+        function handleMobileUpload(input) {
+            if (input.files.length > 0) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.enctype = 'multipart/form-data';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'upload';
+                
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.name = 'file';
+                fileInput.files = input.files;
+                
+                form.appendChild(actionInput);
+                form.appendChild(fileInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        // 滚动到顶部
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+
+        
+        // 长按选择功能
+        function initLongPressSelect() {
+            const cards = document.querySelectorAll('.file-card');
+            let longPressTimer;
+            let targetCard = null;
+            
+            cards.forEach(card => {
+                card.addEventListener('touchstart', function(e) {
+                    if (isMobileSelectMode) return;
+                    
+                    targetCard = card;
+                    card.classList.add('selecting');
+                    
+                    longPressTimer = setTimeout(() => {
+                        // 触发选择模式
+                        if (!isMobileSelectMode) {
+                            toggleMobileSelectMode();
+                        }
+                        
+                        // 选中当前项
+                        const checkbox = card.querySelector('.file-card-select');
+                        checkbox.checked = true;
+                        updateMobileSelection(checkbox);
+                        
+                        // 触觉反馈
+                        if (navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
+                        
+                        card.classList.remove('selecting');
+                    }, 500);
+                }, { passive: true });
+                
+                card.addEventListener('touchend', function(e) {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                    }
+                    if (targetCard) {
+                        targetCard.classList.remove('selecting');
+                        targetCard = null;
+                    }
+                }, { passive: true });
+                
+                card.addEventListener('touchmove', function(e) {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                    }
+                    if (targetCard) {
+                        targetCard.classList.remove('selecting');
+                    }
+                }, { passive: true });
+            });
+        }
+        
+        // 增强的移动端初始化
+        function initMobileOptimizations() {
+            // 检测移动设备
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // 显示底部操作栏
+                document.getElementById('mobileBottomBar').classList.add('show');
+                
+                // 初始化滚动监听，显示返回顶部按钮
+                let scrollTimer;
+                window.addEventListener('scroll', function() {
+                    const fab = document.getElementById('mobileFab');
+                    if (window.scrollY > 300) {
+                        fab.classList.add('show');
+                    } else {
+                        fab.classList.remove('show');
+                    }
+                    
+                    // 滚动时隐藏底部栏，停止时显示
+                    const bottomBar = document.getElementById('mobileBottomBar');
+                    bottomBar.style.transform = 'translateY(100%)';
+                    clearTimeout(scrollTimer);
+                    scrollTimer = setTimeout(() => {
+                        bottomBar.style.transform = 'translateY(0)';
+                    }, 150);
+                });
+                
+                // 初始化长按选择
+                initLongPressSelect();
+            }
+        }
+        
+        // 增强搜索功能 - 支持移动端卡片
+        function filterFiles() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const desktopItems = document.querySelectorAll('.file-list-item');
+            const mobileCards = document.querySelectorAll('.file-card');
+            
+            // 过滤桌面版列表
+            desktopItems.forEach(item => {
+                const fileName = item.dataset.name;
+                if (fileName.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // 过滤移动版卡片
+            mobileCards.forEach(card => {
+                const fileName = card.dataset.name;
+                if (fileName.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // 响应式处理
+        function handleResize() {
+            const isMobile = window.innerWidth <= 768;
+            const bottomBar = document.getElementById('mobileBottomBar');
+            const fab = document.getElementById('mobileFab');
+            
+            if (isMobile) {
+                bottomBar.classList.add('show');
+                if (window.scrollY > 300) {
+                    fab.classList.add('show');
+                }
+                
+                // 重新初始化移动端功能
+                setTimeout(() => {
+                    initLongPressSelect();
+                }, 100);
+            } else {
+                bottomBar.classList.remove('show');
+                fab.classList.remove('show');
+                
+                // 退出选择模式
+                if (isMobileSelectMode) {
+                    toggleMobileSelectMode();
+                }
+            }
+            
+            // 处理显示中的模态框的类名
+            const visibleModals = document.querySelectorAll('.modal[style*="display: block"], .modal[style*="display:block"]');
+            visibleModals.forEach(modal => {
+                if (isMobile) {
+                    modal.classList.add('modal-show');
+                } else {
+                    modal.classList.remove('modal-show');
+                }
+            });
+            
+            // 移动端时调整悬浮预览位置
+            if (isMobile && isPreviewMinimized) {
+                const floatingPreview = document.getElementById('floatingPreview');
+                if (floatingPreview) {
+                    floatingPreview.style.bottom = '10px';
+                    floatingPreview.style.right = '10px';
+                }
+            }
+        }
+
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 确保所有模态框在页面加载时都是隐藏的
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('modal-show');
+            });
+            
             initMobileOptimizations();
+            
+            // 为底部操作栏添加平滑过渡
+            const bottomBar = document.getElementById('mobileBottomBar');
+            if (bottomBar) {
+                bottomBar.style.transition = 'transform 0.3s ease';
+            }
         });
 
         window.addEventListener('resize', handleResize);
