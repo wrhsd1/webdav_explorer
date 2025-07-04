@@ -1945,7 +1945,7 @@ function isPreviewable($filename) {
         <div class="floating-preview-icon" onclick="restorePreview()">
             <span id="floatingIcon">🎵</span>
             <div>
-                <div class="floating-preview-title" id="floatingTitle">音乐播放中...</div>
+                <div class="floating-preview-title" id="floatingTitle">预览中...</div>
                 <div class="floating-preview-subtitle" id="floatingSubtitle">点击展开</div>
             </div>
         </div>
@@ -2148,14 +2148,21 @@ function isPreviewable($filename) {
             const modal = document.getElementById('previewModal');
             const floatingPreview = document.getElementById('floatingPreview');
             
+            console.log('Minimizing preview...'); // 调试用
+            
+            // 立即移除移动端显示类，避免冲突
+            modal.classList.remove('modal-show');
+            
             // 添加收起动画类
             modal.classList.add('minimized');
             
             // 延迟显示悬浮按钮，让动画更自然
             setTimeout(() => {
                 modal.style.display = 'none';
+                modal.classList.remove('minimized'); // 清理动画类
                 showFloatingPreview();
                 isPreviewMinimized = true;
+                console.log('Preview minimized, floating preview shown'); // 调试用
             }, 400);
         }
 
@@ -2195,8 +2202,14 @@ function isPreviewable($filename) {
             const floatingPreview = document.getElementById('floatingPreview');
             const floatingControls = document.getElementById('floatingControls');
             
-            // 根据类型设置样式
+            // 保存当前的状态类名（如 minimizing, restoring, playing 等）
+            const currentClasses = Array.from(floatingPreview.classList).filter(cls => 
+                cls !== 'floating-preview' && !['audio', 'video', 'image', 'text', 'pdf', 'other'].includes(cls)
+            );
+            
+            // 根据类型设置样式，但保留状态类名
             floatingPreview.className = `floating-preview ${type}`;
+            currentClasses.forEach(cls => floatingPreview.classList.add(cls));
             
             // 对于音视频文件，显示控制按钮
             if (type === 'audio' || type === 'video') {
@@ -2208,19 +2221,30 @@ function isPreviewable($filename) {
 
         function showFloatingPreview() {
             const floatingPreview = document.getElementById('floatingPreview');
+            
+            console.log('Showing floating preview...'); // 调试用
+            
+            // 确保悬浮框处于正确的初始状态
             floatingPreview.style.display = 'block';
-            floatingPreview.classList.add('minimizing');
+            
+            // 添加收起动画，如果不存在的话
+            if (!floatingPreview.classList.contains('minimizing')) {
+                floatingPreview.classList.add('minimizing');
+            }
+            
+            console.log('Floating preview display set to block'); // 调试用
             
             // 清除动画类
             setTimeout(() => {
                 floatingPreview.classList.remove('minimizing');
+                console.log('Floating preview animation completed'); // 调试用
             }, 600);
         }
 
         function hideFloatingPreview() {
             const floatingPreview = document.getElementById('floatingPreview');
             floatingPreview.style.display = 'none';
-            floatingPreview.classList.remove('minimizing', 'restoring', 'playing');
+            floatingPreview.classList.remove('minimizing', 'restoring', 'playing', 'audio', 'video', 'image', 'text', 'pdf', 'other');
         }
 
         function onMediaPlay() {
