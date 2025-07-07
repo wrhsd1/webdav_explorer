@@ -291,22 +291,42 @@ function isPreviewable($filename) {
             gap: 0.5rem;
             flex: 1;
             min-width: 200px;
+            flex-wrap: wrap;
         }
-        
-        .breadcrumb a {
+          .breadcrumb a,
+        .breadcrumb-link {
             color: #3182ce;
             text-decoration: none;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             transition: background-color 0.2s;
+            white-space: nowrap;
+            word-break: keep-all;
         }
-        
-        .breadcrumb a:hover {
+
+        .breadcrumb a:hover,
+        .breadcrumb-link:hover {
             background: #ebf8ff;
         }
-        
-        .breadcrumb span {
+
+        .breadcrumb span,
+        .breadcrumb-current {
             color: #4a5568;
+            white-space: nowrap;
+            word-break: keep-all;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .breadcrumb-separator {
+            color: #a0aec0;
+            padding: 0 0.25rem;
+            font-size: 0.9rem;
+        }
+        
+        .breadcrumb-current {
+            font-weight: 600;
+            background: rgba(49, 130, 206, 0.1);
+            border-radius: 4px;
         }
         
         .view-controls {
@@ -867,7 +887,7 @@ function isPreviewable($filename) {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            z-index: 1001;
+            z-index: 10001;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 25px;
             padding: 12px 18px;
@@ -878,6 +898,82 @@ function isPreviewable($filename) {
             max-width: 320px;
             border: 1px solid rgba(255,255,255,0.1);
             overflow: hidden;
+        }
+        
+        .floating-preview:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .floating-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            border-radius: 25px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .floating-preview:hover::before {
+            opacity: 1;
+        }
+        
+        .floating-preview.persistent {
+            animation: persistentBreathe 3s ease-in-out infinite;
+        }
+        
+        @keyframes persistentBreathe {
+            0%, 100% { 
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 0 rgba(102, 126, 234, 0.4);
+            }
+            50% { 
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 8px rgba(102, 126, 234, 0.1);
+            }
+        }
+        
+        /* 全局媒体播放器样式 */
+        #globalMediaPlayer {
+            position: fixed !important;
+            top: -1000px !important;
+            left: -1000px !important;
+            width: 1px !important;
+            height: 1px !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            z-index: -1 !important;
+        }
+        
+        .floating-preview-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 0 0 25px 25px;
+            overflow: hidden;
+        }
+        
+        .floating-preview-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 0 0 25px 25px;
+        }
+        
+        .floating-preview.audio .floating-preview-progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .floating-preview.video .floating-preview-progress-bar {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
         }
         
         .floating-preview:hover {
@@ -1352,22 +1448,70 @@ function isPreviewable($filename) {
                 background: #f8fafc;
                 padding: 0.75rem;
                 border-radius: 8px;
-                overflow-x: auto;
+                overflow: visible;
+                white-space: normal;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.5rem;
+                line-height: 1.5;
+                max-width: 100%;
+                word-break: break-word;
+            }
+            
+            .breadcrumb a,
+            .breadcrumb-link {
+                color: #3182ce;
+                text-decoration: none;
+                padding: 0.375rem 0.75rem;
+                border-radius: 6px;
+                transition: all 0.2s;
                 white-space: nowrap;
+                word-break: keep-all;
+                background: rgba(255,255,255,0.7);
+                border: 1px solid rgba(255,255,255,0.3);
+                font-size: 0.85rem;
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: inline-block;
             }
             
-            .breadcrumb::-webkit-scrollbar {
-                height: 3px;
+            .breadcrumb a:hover,
+            .breadcrumb-link:hover {
+                background: rgba(255,255,255,0.9);
+                border-color: rgba(49, 130, 206, 0.3);
+                max-width: none;
+                overflow: visible;
+                text-overflow: unset;
             }
             
-            .breadcrumb::-webkit-scrollbar-track {
-                background: #f1f1f1;
-                border-radius: 3px;
+            .breadcrumb span,
+            .breadcrumb-current {
+                color: #4a5568;
+                white-space: nowrap;
+                padding: 0.375rem 0.75rem;
+                font-size: 0.85rem;
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: inline-block;
             }
             
-            .breadcrumb::-webkit-scrollbar-thumb {
-                background: #cbd5e0;
-                border-radius: 3px;
+            .breadcrumb-current {
+                font-weight: 600;
+                background: rgba(49, 130, 206, 0.2);
+                border-radius: 6px;
+                border: 1px solid rgba(49, 130, 206, 0.3);
+            }
+            
+            .breadcrumb-separator {
+                color: #a0aec0;
+                font-size: 0.8rem;
+                margin: 0 0.25rem;
+                padding: 0;
+                display: inline-block;
+                flex-shrink: 0;
             }
             
             .search-box {
@@ -1489,6 +1633,48 @@ function isPreviewable($filename) {
                 font-size: 0.85rem;
             }
             
+            .breadcrumb a,
+            .breadcrumb-link {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+                max-width: 120px;
+                border-radius: 4px;
+            }
+            
+            .breadcrumb span,
+            .breadcrumb-current {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+                max-width: 120px;
+            }
+            
+            .breadcrumb-separator {
+                font-size: 0.7rem;
+                margin: 0 0.125rem;
+            }
+            
+            /* 对于超长路径，只显示最后几个层级 */
+            .breadcrumb.has-overflow .breadcrumb-item:nth-child(-n+6) {
+                display: none;
+            }
+            
+            .breadcrumb.has-overflow .breadcrumb-item:nth-last-child(-n+3) {
+                display: inline-block;
+            }
+            
+            /* 添加省略号提示 */
+            .breadcrumb::before {
+                content: "...";
+                color: #a0aec0;
+                font-size: 0.8rem;
+                margin-right: 0.5rem;
+                display: none;
+            }
+            
+            .breadcrumb.has-overflow::before {
+                display: inline-block;
+            }
+            
             .search-box {
                 padding: 0.625rem;
             }
@@ -1581,13 +1767,24 @@ function isPreviewable($filename) {
         
         <div class="toolbar">
             <div class="toolbar-top">
-                <div class="breadcrumb">
+                <div class="breadcrumb" id="breadcrumbNav">
+                    <?php 
+                    $breadcrumbCount = count($breadcrumbs);
+                    $hasOverflow = $breadcrumbCount > 4; // 超过4级则认为可能溢出
+                    if ($hasOverflow): ?>
+                        <script>document.getElementById('breadcrumbNav').classList.add('has-overflow');</script>
+                    <?php endif; ?>
+                    
                     <?php foreach ($breadcrumbs as $i => $crumb): ?>
-                        <?php if ($i > 0): ?><span>/</span><?php endif; ?>
+                        <?php if ($i > 0): ?><span class="breadcrumb-separator breadcrumb-item">/</span><?php endif; ?>
                         <?php if ($crumb['path'] === $currentPath): ?>
-                            <span><?php echo htmlspecialchars($crumb['name']); ?></span>
+                            <span class="breadcrumb-current breadcrumb-item" title="<?php echo htmlspecialchars($crumb['name']); ?>">
+                                <?php echo htmlspecialchars($crumb['name']); ?>
+                            </span>
                         <?php else: ?>
-                            <a href="?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($crumb['path']); ?>">
+                            <a href="?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($crumb['path']); ?>" 
+                               class="breadcrumb-link breadcrumb-item" 
+                               title="<?php echo htmlspecialchars($crumb['name']); ?>">
                                 <?php echo htmlspecialchars($crumb['name']); ?>
                             </a>
                         <?php endif; ?>
@@ -1950,9 +2147,19 @@ function isPreviewable($filename) {
             </div>
         </div>
         <div class="floating-preview-controls" id="floatingControls" style="display: none;">
-            <button class="floating-preview-btn" onclick="toggleMediaPlayPause(event)">⏯️</button>
-            <button class="floating-preview-btn" onclick="closePreviewCompletely(event)">✕</button>
+            <button class="floating-preview-btn" onclick="toggleGlobalMediaPlayPause(event)" title="播放/暂停">⏯️</button>
+            <button class="floating-preview-btn" onclick="openOriginalFile(event)" title="查看原文件">📁</button>
+            <button class="floating-preview-btn" onclick="closePreviewCompletely(event)" title="关闭">✕</button>
         </div>
+        <div class="floating-preview-progress" id="floatingProgress" style="display: none;">
+            <div class="floating-preview-progress-bar" id="floatingProgressBar"></div>
+        </div>
+    </div>
+
+    <!-- 全局隐藏的媒体播放器 -->
+    <div id="globalMediaPlayer" style="position: fixed; top: -1000px; left: -1000px; pointer-events: none; opacity: 0;">
+        <audio id="globalAudioPlayer" onplay="onGlobalMediaPlay()" onpause="onGlobalMediaPause()" onended="onGlobalMediaEnded()" ontimeupdate="onGlobalMediaProgress()"></audio>
+        <video id="globalVideoPlayer" onplay="onGlobalMediaPlay()" onpause="onGlobalMediaPause()" onended="onGlobalMediaEnded()" ontimeupdate="onGlobalMediaProgress()"></video>
     </div>
 
     <script>
@@ -1960,6 +2167,248 @@ function isPreviewable($filename) {
         let currentPreviewFile = null;
         let currentPreviewType = null;
         let isPreviewMinimized = false;
+
+        // 持久化预览状态的管理
+        class PersistentPreview {
+            constructor() {
+                this.storageKey = 'webdav_floating_preview';
+                this.mediaStateKey = 'webdav_media_state';
+                this.init();
+            }
+
+            init() {
+                // 页面加载时恢复悬浮预览状态
+                this.restoreFloatingPreview();
+                
+                // 监听页面卸载事件，保存状态
+                window.addEventListener('beforeunload', () => {
+                    this.saveFloatingPreview();
+                    this.saveMediaState();
+                });
+                
+                // 监听存储变化（其他标签页的更新）
+                window.addEventListener('storage', (e) => {
+                    if (e.key === this.storageKey) {
+                        this.restoreFloatingPreview();
+                    }
+                });
+            }
+
+            saveMediaState() {
+                if (isPreviewMinimized && currentPreviewFile && (currentPreviewType === 'audio' || currentPreviewType === 'video')) {
+                    const player = this.getGlobalPlayer();
+                    if (player && !player.paused) {
+                        const mediaState = {
+                            file: currentPreviewFile,
+                            type: currentPreviewType,
+                            currentTime: player.currentTime,
+                            duration: player.duration,
+                            isPlaying: !player.paused,
+                            timestamp: Date.now(),
+                            account: '<?php echo urlencode($currentAccountKey); ?>'
+                        };
+                        localStorage.setItem(this.mediaStateKey, JSON.stringify(mediaState));
+                    }
+                }
+            }
+
+            restoreMediaState() {
+                try {
+                    const data = localStorage.getItem(this.mediaStateKey);
+                    if (!data) return false;
+
+                    const mediaState = JSON.parse(data);
+                    
+                    // 检查数据是否过期（10分钟）
+                    if (Date.now() - mediaState.timestamp > 600000) {
+                        localStorage.removeItem(this.mediaStateKey);
+                        return false;
+                    }
+
+                    // 检查账户是否匹配
+                    if (mediaState.account !== '<?php echo urlencode($currentAccountKey); ?>') {
+                        return false;
+                    }
+
+                    // 检查是否是同一个文件
+                    if (currentPreviewFile && 
+                        currentPreviewFile.path === mediaState.file.path && 
+                        (currentPreviewType === 'audio' || currentPreviewType === 'video')) {
+                        
+                        const player = this.getGlobalPlayer();
+                        if (player) {
+                            player.currentTime = mediaState.currentTime;
+                            if (mediaState.isPlaying) {
+                                player.play();
+                            }
+                            return true;
+                        }
+                    }
+                } catch (e) {
+                    console.error('恢复媒体状态失败:', e);
+                    localStorage.removeItem(this.mediaStateKey);
+                }
+                return false;
+            }
+
+            getGlobalPlayer() {
+                if (currentPreviewType === 'audio') {
+                    return document.getElementById('globalAudioPlayer');
+                } else if (currentPreviewType === 'video') {
+                    return document.getElementById('globalVideoPlayer');
+                }
+                return null;
+            }
+
+            saveFloatingPreview() {
+                if (isPreviewMinimized && currentPreviewFile) {
+                    const previewData = {
+                        file: currentPreviewFile,
+                        type: currentPreviewType,
+                        isMinimized: true,
+                        timestamp: Date.now(),
+                        account: '<?php echo urlencode($currentAccountKey); ?>'
+                    };
+                    localStorage.setItem(this.storageKey, JSON.stringify(previewData));
+                } else {
+                    localStorage.removeItem(this.storageKey);
+                }
+            }
+
+            restoreFloatingPreview() {
+                try {
+                    const data = localStorage.getItem(this.storageKey);
+                    if (!data) return;
+
+                    const previewData = JSON.parse(data);
+                    
+                    // 检查数据是否过期（1小时）
+                    if (Date.now() - previewData.timestamp > 3600000) {
+                        localStorage.removeItem(this.storageKey);
+                        return;
+                    }
+
+                    // 检查账户是否匹配
+                    if (previewData.account !== '<?php echo urlencode($currentAccountKey); ?>') {
+                        return;
+                    }
+
+                    // 恢复悬浮预览状态
+                    if (previewData.isMinimized && previewData.file) {
+                        currentPreviewFile = previewData.file;
+                        currentPreviewType = previewData.type;
+                        isPreviewMinimized = true;
+                        
+                        // 重新生成悬浮预览内容
+                        this.recreateFloatingPreview(previewData);
+                        
+                        // 对于媒体文件，初始化全局播放器
+                        if (currentPreviewType === 'audio' || currentPreviewType === 'video') {
+                            this.initGlobalPlayer();
+                        }
+                    }
+                } catch (e) {
+                    console.error('恢复悬浮预览失败:', e);
+                    localStorage.removeItem(this.storageKey);
+                }
+            }
+
+            initGlobalPlayer() {
+                const player = this.getGlobalPlayer();
+                if (player && currentPreviewFile) {
+                    const previewUrl = `transfer.php?account=<?php echo urlencode($currentAccountKey); ?>&path=${encodeURIComponent(currentPreviewFile.path)}`;
+                    player.src = previewUrl;
+                    
+                    // 尝试恢复播放状态
+                    player.addEventListener('loadeddata', () => {
+                        this.restoreMediaState();
+                    }, { once: true });
+                    
+                    player.load();
+                }
+            }
+
+            recreateFloatingPreview(previewData) {
+                const { file, type } = previewData;
+                
+                // 根据文件类型设置图标和标题
+                let icon, title;
+                switch (type) {
+                    case 'audio':
+                        icon = '🎵';
+                        title = '音乐播放';
+                        break;
+                    case 'video':
+                        icon = '🎬';
+                        title = '视频播放';
+                        break;
+                    case 'image':
+                        icon = '🖼️';
+                        title = '图片预览';
+                        break;
+                    case 'text':
+                        icon = '📝';
+                        title = '文本预览';
+                        break;
+                    case 'pdf':
+                        icon = '📄';
+                        title = 'PDF预览';
+                        break;
+                    default:
+                        icon = '📄';
+                        title = '文件预览';
+                }
+
+                updateFloatingPreview(icon, title, file.name, type);
+                showFloatingPreview();
+                
+                // 添加持久化标识
+                const floatingPreview = document.getElementById('floatingPreview');
+                floatingPreview.classList.add('persistent');
+                
+                // 添加恢复提示
+                this.showRestoreHint();
+            }
+
+            showRestoreHint() {
+                const floatingPreview = document.getElementById('floatingPreview');
+                if (floatingPreview) {
+                    // 添加一个临时的提示元素
+                    const hint = document.createElement('div');
+                    hint.style.cssText = `
+                        position: absolute;
+                        top: -30px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: rgba(0,0,0,0.8);
+                        color: white;
+                        padding: 4px 8px;
+                        border-radius: 12px;
+                        font-size: 0.7rem;
+                        white-space: nowrap;
+                        pointer-events: none;
+                        z-index: 10002;
+                    `;
+                    hint.textContent = '已恢复预览状态';
+                    floatingPreview.appendChild(hint);
+                    
+                    // 3秒后移除提示
+                    setTimeout(() => {
+                        if (hint.parentNode) {
+                            hint.parentNode.removeChild(hint);
+                        }
+                    }, 3000);
+                }
+            }
+
+            clearPreview() {
+                localStorage.removeItem(this.storageKey);
+                localStorage.removeItem(this.mediaStateKey);
+            }
+        }
+
+        // 初始化持久化预览管理器
+        const persistentPreview = new PersistentPreview();
 
         function showModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -1979,6 +2428,9 @@ function isPreviewable($filename) {
                 currentPreviewFile = null;
                 currentPreviewType = null;
                 isPreviewMinimized = false;
+                
+                // 清除持久化状态
+                persistentPreview.clearPreview();
             }
         }
 
@@ -2107,10 +2559,16 @@ function isPreviewable($filename) {
                 currentPreviewType = 'video';
                 content.innerHTML = `<video controls style="max-width: 100%; max-height: 70vh;" onplay="onMediaPlay()" onpause="onMediaPause()"><source src="${previewUrl}" type="video/${ext}"></video>`;
                 updateFloatingPreview('🎬', `视频播放`, name, 'video');
+                
+                // 初始化全局视频播放器
+                initGlobalMediaPlayer(previewUrl, 'video');
             } else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) {
                 currentPreviewType = 'audio';
                 content.innerHTML = `<audio controls style="width: 100%;" autoplay onplay="onMediaPlay()" onpause="onMediaPause()"><source src="${previewUrl}" type="audio/${ext}"></audio>`;
                 updateFloatingPreview('🎵', `音乐播放`, name, 'audio');
+                
+                // 初始化全局音频播放器
+                initGlobalMediaPlayer(previewUrl, 'audio');
             } else if (['txt', 'md', 'html', 'css', 'js', 'json', 'xml', 'csv', 'php', 'py', 'java', 'cpp', 'c', 'h', 'sql', 'yaml', 'yml'].includes(ext)) {
                 currentPreviewType = 'text';
                 // 文本文件预览
@@ -2134,6 +2592,54 @@ function isPreviewable($filename) {
             }
         }
 
+        function initGlobalMediaPlayer(url, type) {
+            const globalPlayer = persistentPreview.getGlobalPlayer();
+            if (globalPlayer) {
+                globalPlayer.src = url;
+                globalPlayer.load();
+                
+                // 同步播放状态
+                const modalPlayer = document.querySelector(`#previewContent ${type}`);
+                if (modalPlayer) {
+                    // 当模态框播放器开始播放时，同步到全局播放器
+                    modalPlayer.addEventListener('play', () => {
+                        globalPlayer.currentTime = modalPlayer.currentTime;
+                        globalPlayer.play();
+                    });
+                    
+                    modalPlayer.addEventListener('pause', () => {
+                        globalPlayer.pause();
+                    });
+                    
+                    modalPlayer.addEventListener('timeupdate', () => {
+                        if (Math.abs(globalPlayer.currentTime - modalPlayer.currentTime) > 1) {
+                            globalPlayer.currentTime = modalPlayer.currentTime;
+                        }
+                    });
+                    
+                    // 当全局播放器状态变化时，同步到模态框播放器
+                    globalPlayer.addEventListener('play', () => {
+                        if (modalPlayer.paused) {
+                            modalPlayer.currentTime = globalPlayer.currentTime;
+                            modalPlayer.play();
+                        }
+                    });
+                    
+                    globalPlayer.addEventListener('pause', () => {
+                        if (!modalPlayer.paused) {
+                            modalPlayer.pause();
+                        }
+                    });
+                    
+                    globalPlayer.addEventListener('timeupdate', () => {
+                        if (Math.abs(modalPlayer.currentTime - globalPlayer.currentTime) > 1) {
+                            modalPlayer.currentTime = globalPlayer.currentTime;
+                        }
+                    });
+                }
+            }
+        }
+
         function togglePreviewMinimize() {
             if (isPreviewMinimized) {
                 restorePreview();
@@ -2150,6 +2656,19 @@ function isPreviewable($filename) {
             
             console.log('Minimizing preview...'); // 调试用
             
+            // 对于媒体文件，确保全局播放器已同步
+            if (currentPreviewType === 'audio' || currentPreviewType === 'video') {
+                const modalPlayer = document.querySelector(`#previewContent ${currentPreviewType}`);
+                const globalPlayer = persistentPreview.getGlobalPlayer();
+                
+                if (modalPlayer && globalPlayer) {
+                    globalPlayer.currentTime = modalPlayer.currentTime;
+                    if (!modalPlayer.paused) {
+                        globalPlayer.play();
+                    }
+                }
+            }
+            
             // 立即移除移动端显示类，避免冲突
             modal.classList.remove('modal-show');
             
@@ -2162,6 +2681,11 @@ function isPreviewable($filename) {
                 modal.classList.remove('minimized'); // 清理动画类
                 showFloatingPreview();
                 isPreviewMinimized = true;
+                
+                // 保存悬浮预览状态
+                persistentPreview.saveFloatingPreview();
+                persistentPreview.saveMediaState();
+                
                 console.log('Preview minimized, floating preview shown'); // 调试用
             }, 400);
         }
@@ -2177,18 +2701,15 @@ function isPreviewable($filename) {
             
             setTimeout(() => {
                 hideFloatingPreview();
-                modal.style.display = 'block';
-                // 为移动端添加特殊类名
-                if (window.innerWidth <= 768) {
-                    modal.classList.add('modal-show');
-                }
-                modal.classList.remove('minimized');
-                modal.classList.add('restored');
-                isPreviewMinimized = false;
+                
+                // 重新加载预览内容
+                previewFile(currentPreviewFile.path, currentPreviewFile.name);
+                
+                // 清除持久化状态
+                persistentPreview.clearPreview();
                 
                 // 清除动画类
                 setTimeout(() => {
-                    modal.classList.remove('restored');
                     floatingPreview.classList.remove('restoring');
                 }, 400);
             }, 300);
@@ -2211,12 +2732,27 @@ function isPreviewable($filename) {
             floatingPreview.className = `floating-preview ${type}`;
             currentClasses.forEach(cls => floatingPreview.classList.add(cls));
             
-            // 对于音视频文件，显示控制按钮
+            // 根据文件类型显示不同的控制按钮
+            floatingControls.style.display = 'flex';
+            
+            // 更新控制按钮
+            const playBtn = floatingControls.querySelector('[onclick*="toggleGlobalMediaPlayPause"]');
+            const originalBtn = floatingControls.querySelector('[onclick*="openOriginalFile"]');
+            const closeBtn = floatingControls.querySelector('[onclick*="closePreviewCompletely"]');
+            const floatingProgress = document.getElementById('floatingProgress');
+            
             if (type === 'audio' || type === 'video') {
-                floatingControls.style.display = 'flex';
+                playBtn.style.display = 'inline-block';
+                playBtn.title = '播放/暂停';
+                floatingProgress.style.display = 'block'; // 显示进度条
             } else {
-                floatingControls.style.display = 'none';
+                playBtn.style.display = 'none';
+                floatingProgress.style.display = 'none'; // 隐藏进度条
             }
+            
+            // 所有类型都显示查看原文件按钮
+            originalBtn.style.display = 'inline-block';
+            closeBtn.style.display = 'inline-block';
         }
 
         function showFloatingPreview() {
@@ -2243,8 +2779,27 @@ function isPreviewable($filename) {
 
         function hideFloatingPreview() {
             const floatingPreview = document.getElementById('floatingPreview');
+            const floatingProgress = document.getElementById('floatingProgress');
+            
             floatingPreview.style.display = 'none';
             floatingPreview.classList.remove('minimizing', 'restoring', 'playing', 'audio', 'video', 'image', 'text', 'pdf', 'other');
+            
+            if (floatingProgress) {
+                floatingProgress.style.display = 'none';
+            }
+            
+            // 停止全局播放器
+            const globalPlayer = persistentPreview.getGlobalPlayer();
+            if (globalPlayer) {
+                globalPlayer.pause();
+                globalPlayer.src = '';
+            }
+            
+            // 清除持久化状态
+            if (isPreviewMinimized) {
+                persistentPreview.clearPreview();
+                isPreviewMinimized = false;
+            }
         }
 
         function onMediaPlay() {
@@ -2257,20 +2812,88 @@ function isPreviewable($filename) {
             floatingPreview.classList.remove('playing');
         }
 
-        function toggleMediaPlayPause(event) {
-            event.stopPropagation();
-            const mediaElement = document.querySelector('#previewContent audio, #previewContent video');
-            if (mediaElement) {
-                if (mediaElement.paused) {
-                    mediaElement.play();
-                } else {
-                    mediaElement.pause();
+        function onGlobalMediaPlay() {
+            const floatingPreview = document.getElementById('floatingPreview');
+            floatingPreview.classList.add('playing');
+        }
+
+        function onGlobalMediaPause() {
+            const floatingPreview = document.getElementById('floatingPreview');
+            floatingPreview.classList.remove('playing');
+        }
+
+        function onGlobalMediaEnded() {
+            const floatingPreview = document.getElementById('floatingPreview');
+            floatingPreview.classList.remove('playing');
+        }
+
+        function onGlobalMediaProgress() {
+            const globalPlayer = persistentPreview.getGlobalPlayer();
+            if (globalPlayer && globalPlayer.duration) {
+                const progress = (globalPlayer.currentTime / globalPlayer.duration) * 100;
+                const progressBar = document.getElementById('floatingProgressBar');
+                if (progressBar) {
+                    progressBar.style.width = progress + '%';
+                }
+                
+                // 更新悬浮预览的副标题，显示播放进度
+                const subtitle = document.getElementById('floatingSubtitle');
+                if (subtitle && isPreviewMinimized) {
+                    const currentTime = formatTime(globalPlayer.currentTime);
+                    const totalTime = formatTime(globalPlayer.duration);
+                    subtitle.textContent = `${currentTime} / ${totalTime}`;
                 }
             }
         }
 
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function toggleGlobalMediaPlayPause(event) {
+            event.stopPropagation();
+            
+            const globalPlayer = persistentPreview.getGlobalPlayer();
+            if (globalPlayer) {
+                if (globalPlayer.paused) {
+                    globalPlayer.play();
+                } else {
+                    globalPlayer.pause();
+                }
+            } else {
+                // 如果没有全局播放器，恢复预览
+                restorePreview();
+            }
+        }
+
+        function openOriginalFile(event) {
+            event.stopPropagation();
+            
+            if (!currentPreviewFile) return;
+            
+            // 计算文件所在目录
+            const filePath = currentPreviewFile.path;
+            const directory = filePath.substring(0, filePath.lastIndexOf('/')) || '/';
+            
+            // 保存当前播放状态
+            if (currentPreviewType === 'audio' || currentPreviewType === 'video') {
+                persistentPreview.saveMediaState();
+            }
+            
+            // 跳转到文件所在目录
+            const url = `?account=<?php echo urlencode($currentAccountKey); ?>&path=${encodeURIComponent(directory)}`;
+            window.location.href = url;
+        }
+
         function closePreviewCompletely(event) {
             event.stopPropagation();
+            
+            // 清除持久化状态
+            persistentPreview.clearPreview();
+            
             hideModal('previewModal');
         }
 
@@ -2760,6 +3383,11 @@ function isPreviewable($filename) {
                     floatingPreview.style.right = '10px';
                 }
             }
+            
+            // 更新面包屑显示
+            if (typeof updateBreadcrumbVisibility === 'function') {
+                updateBreadcrumbVisibility();
+            }
         }
 
         // 初始化
@@ -2770,6 +3398,7 @@ function isPreviewable($filename) {
             });
             
             initMobileOptimizations();
+            initResponsiveBreadcrumb();
             
             // 为底部操作栏添加平滑过渡
             const bottomBar = document.getElementById('mobileBottomBar');
@@ -2777,6 +3406,55 @@ function isPreviewable($filename) {
                 bottomBar.style.transition = 'transform 0.3s ease';
             }
         });
+
+        // 响应式面包屑导航
+        let updateBreadcrumbVisibility; // 声明为全局变量
+        
+        function initResponsiveBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumbNav');
+            if (!breadcrumb) return;
+
+            updateBreadcrumbVisibility = function() {
+                const isMobile = window.innerWidth <= 768;
+                const isSmallMobile = window.innerWidth <= 480;
+                const items = breadcrumb.querySelectorAll('.breadcrumb-item');
+                
+                if (isSmallMobile && items.length > 6) {
+                    // 超小屏幕：只显示最后3个项目
+                    items.forEach((item, index) => {
+                        if (index < items.length - 6) {
+                            item.style.display = 'none';
+                        } else {
+                            item.style.display = 'inline-block';
+                        }
+                    });
+                    breadcrumb.classList.add('has-overflow');
+                } else if (isMobile && items.length > 8) {
+                    // 普通移动屏幕：只显示最后4个项目
+                    items.forEach((item, index) => {
+                        if (index < items.length - 8) {
+                            item.style.display = 'none';
+                        } else {
+                            item.style.display = 'inline-block';
+                        }
+                    });
+                    breadcrumb.classList.add('has-overflow');
+                } else {
+                    // 桌面或路径不长：显示所有项目
+                    items.forEach(item => {
+                        item.style.display = 'inline-block';
+                    });
+                    breadcrumb.classList.remove('has-overflow');
+                }
+            };
+
+            // 初始化和窗口大小变化时更新
+            updateBreadcrumbVisibility();
+            window.addEventListener('resize', updateBreadcrumbVisibility);
+            window.addEventListener('orientationchange', function() {
+                setTimeout(updateBreadcrumbVisibility, 100);
+            });
+        }
 
         window.addEventListener('resize', handleResize);
         window.addEventListener('orientationchange', function() {
