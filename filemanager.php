@@ -2,6 +2,7 @@
 require_once 'includes/auth.php';
 require_once 'includes/config.php';
 require_once 'includes/webdav.php';
+require_once 'includes/bookmark.php';
 
 Auth::requireLogin();
 
@@ -29,6 +30,8 @@ $webdav = new WebDAVClient(
     $currentAccount['path']
 );
 
+$bookmarkManager = new Bookmark();
+
 $message = '';
 $error = '';
 
@@ -36,6 +39,36 @@ $error = '';
 if ($_POST) {
     try {
         switch ($_POST['action']) {
+            case 'add_bookmark':
+                $bookmarkName = $_POST['bookmark_name'] ?? '';
+                $bookmarkDescription = $_POST['bookmark_description'] ?? '';
+                if (!empty($bookmarkName)) {
+                    $bookmarkManager->addBookmark($bookmarkName, $currentAccountKey, $currentPath, $bookmarkDescription);
+                    $message = "书签 '{$bookmarkName}' 已添加";
+                }
+                break;
+                
+            case 'delete_bookmark':
+                $bookmarkId = $_POST['bookmark_id'] ?? '';
+                if (!empty($bookmarkId)) {
+                    $bookmark = $bookmarkManager->getBookmarkById($bookmarkId);
+                    if ($bookmark && $bookmarkManager->deleteBookmark($bookmarkId)) {
+                        $message = "书签 '{$bookmark['name']}' 已删除";
+                    }
+                }
+                break;
+                
+            case 'update_bookmark':
+                $bookmarkId = $_POST['bookmark_id'] ?? '';
+                $bookmarkName = $_POST['bookmark_name'] ?? '';
+                $bookmarkDescription = $_POST['bookmark_description'] ?? '';
+                if (!empty($bookmarkId) && !empty($bookmarkName)) {
+                    $bookmark = $bookmarkManager->getBookmarkById($bookmarkId);
+                    if ($bookmark && $bookmarkManager->updateBookmark($bookmarkId, $bookmarkName, $bookmarkDescription)) {
+                        $message = "书签已更新";
+                    }
+                }
+                break;
             case 'upload':
                 if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                     $fileName = $_FILES['file']['name'];
@@ -683,6 +716,362 @@ function isAudioFile($filename) {
             padding: 1.5rem;
             border-top: 1px solid rgba(255,255,255,0.1);
             backdrop-filter: blur(20px);
+        }
+        
+        /* 书签面板样式 */
+        .bookmarks-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            z-index: 400;
+            transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e2e8f0;
+        }
+        
+        .bookmarks-panel.open {
+            right: 0;
+        }
+        
+        .bookmarks-header {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .bookmarks-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .bookmarks-header .subtitle {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .bookmarks-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bookmarks-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+        
+        .bookmarks-controls {
+            background: white;
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .bookmarks-search {
+            display: flex;
+            align-items: center;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.5rem;
+        }
+        
+        .bookmarks-search input {
+            border: none;
+            background: transparent;
+            outline: none;
+            flex: 1;
+            padding: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .bookmarks-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: white;
+        }
+        
+        .bookmark-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bookmark-item:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .bookmark-item.current-path {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            border-color: #ed8936;
+        }
+        
+        .bookmark-item.current-path::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #fbd38d 0%, #f6ad55 100%);
+        }
+        
+        .bookmark-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .bookmark-icon {
+            font-size: 2rem;
+            min-width: 3rem;
+            text-align: center;
+            opacity: 0.8;
+        }
+        
+        .bookmark-details {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .bookmark-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .bookmark-path {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 0.25rem;
+        }
+        
+        .bookmark-description {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .bookmark-meta {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .bookmark-account {
+            background: rgba(0,0,0,0.1);
+            padding: 0.125rem 0.375rem;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .bookmark-item.current-path .bookmark-path,
+        .bookmark-item.current-path .bookmark-description,
+        .bookmark-item.current-path .bookmark-meta {
+            opacity: 0.9;
+        }
+        
+        .bookmark-item.current-path .bookmark-account {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .bookmark-actions {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+        }
+        
+        .bookmark-item:hover .bookmark-actions {
+            opacity: 1;
+        }
+        
+        .bookmark-item.current-path .bookmark-actions {
+            opacity: 1;
+        }
+        
+        .bookmark-action-btn {
+            background: rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 6px;
+            padding: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            color: inherit;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bookmark-action-btn:hover {
+            background: rgba(0,0,0,0.2);
+            transform: scale(1.1);
+        }
+        
+        .bookmark-item.current-path .bookmark-action-btn {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .bookmark-item.current-path .bookmark-action-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .bookmarks-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #718096;
+        }
+        
+        .bookmarks-empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .bookmarks-empty h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+        
+        .bookmarks-empty p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .bookmarks-loading {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        /* 书签统计卡片 */
+        .bookmarks-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .bookmarks-stats-title {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+        
+        .bookmarks-stats-number {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .bookmarks-panel {
+                width: 100vw;
+                right: -100vw;
+            }
+            
+            .bookmarks-controls {
+                padding: 0.75rem;
+            }
+            
+            .bookmark-item {
+                padding: 0.75rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .bookmark-info {
+                gap: 0.75rem;
+            }
+            
+            .bookmark-icon {
+                font-size: 1.8rem;
+                min-width: 2.5rem;
+            }
+            
+            .bookmark-name {
+                font-size: 0.95rem;
+            }
+            
+            .bookmark-path {
+                font-size: 0.75rem;
+            }
+            
+            .bookmark-description {
+                font-size: 0.7rem;
+            }
+            
+            .bookmark-actions {
+                top: 0.5rem;
+                right: 0.5rem;
+                gap: 0.25rem;
+            }
+            
+            .bookmark-action-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 0.7rem;
+            }
+            
+            body.bookmarks-open {
+                overflow: hidden;
+            }
         }
         
         .music-player-info {
@@ -2454,6 +2843,14 @@ function isAudioFile($filename) {
                     🔗 URL上传
                 </button>
                 
+                <button onclick="showModal('addBookmarkModal')" class="btn btn-warning">
+                    ⭐ 添加书签
+                </button>
+                
+                <button onclick="showBookmarksPanel()" class="btn btn-secondary" id="bookmarksBtn">
+                    📚 书签列表
+                </button>
+                
                 <button onclick="toggleSelectAll()" class="btn btn-secondary" id="selectAllBtn">
                     ☑️ 全选
                 </button>
@@ -2687,9 +3084,14 @@ function isAudioFile($filename) {
                 <small>新建</small>
             </button>
             
-            <button onclick="showModal('uploadUrlModal')" class="btn btn-info">
-                <span>🔗</span>
-                <small>URL</small>
+            <button onclick="showModal('addBookmarkModal')" class="btn btn-warning">
+                <span>⭐</span>
+                <small>书签</small>
+            </button>
+            
+            <button onclick="showBookmarksPanel()" class="btn btn-secondary">
+                <span>�</span>
+                <small>列表</small>
             </button>
             
             <button onclick="toggleMobileSelectMode()" class="btn btn-secondary" id="mobileSelectBtn">
@@ -2766,6 +3168,63 @@ function isAudioFile($filename) {
                 <button type="button" onclick="hideModal('uploadUrlModal')" class="btn btn-secondary">取消</button>
                 <button type="button" onclick="uploadFromUrl()" class="btn btn-primary">上传</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 添加书签模态框 -->
+    <div id="addBookmarkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加书签</h3>
+                <span class="close" onclick="hideModal('addBookmarkModal')">&times;</span>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="add_bookmark">
+                <div class="form-group">
+                    <label for="bookmark_name">书签名称</label>
+                    <input type="text" id="bookmark_name" name="bookmark_name" required placeholder="为此路径命名">
+                </div>
+                <div class="form-group">
+                    <label for="bookmark_description">描述（可选）</label>
+                    <textarea id="bookmark_description" name="bookmark_description" rows="3" placeholder="添加描述信息..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>当前路径</label>
+                    <div style="background: #f7fafc; padding: 0.75rem; border-radius: 6px; border: 1px solid #e2e8f0; color: #4a5568;">
+                        <?php echo htmlspecialchars($currentAccount['name']); ?>: <?php echo htmlspecialchars($currentPath); ?>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="hideModal('addBookmarkModal')" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-warning">⭐ 添加书签</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑书签模态框 -->
+    <div id="editBookmarkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑书签</h3>
+                <span class="close" onclick="hideModal('editBookmarkModal')">&times;</span>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="update_bookmark">
+                <input type="hidden" id="edit_bookmark_id" name="bookmark_id">
+                <div class="form-group">
+                    <label for="edit_bookmark_name">书签名称</label>
+                    <input type="text" id="edit_bookmark_name" name="bookmark_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_bookmark_description">描述</label>
+                    <textarea id="edit_bookmark_description" name="bookmark_description" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="hideModal('editBookmarkModal')" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-primary">保存更改</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -2873,6 +3332,27 @@ function isAudioFile($filename) {
                 <input type="range" class="music-volume-slider" id="volumeSlider" min="0" max="100" value="100" onchange="setVolume(this.value)">
                 <span id="volumeValue">100%</span>
             </div>
+        </div>
+    </div>
+
+    <!-- 书签面板 -->
+    <div class="bookmarks-panel" id="bookmarksPanel">
+        <div class="bookmarks-header">
+            <h3>📚 书签管理</h3>
+            <div class="subtitle">快速访问收藏的路径</div>
+            <button class="bookmarks-close" onclick="closeBookmarks()">×</button>
+        </div>
+        
+        <div class="bookmarks-controls">
+            <div class="bookmarks-search">
+                <input type="text" id="bookmarksSearch" placeholder="搜索书签..." onkeyup="filterBookmarks()">
+                <span>🔍</span>
+            </div>
+            <button class="btn btn-warning btn-sm" onclick="showModal('addBookmarkModal')">⭐ 添加书签</button>
+        </div>
+        
+        <div class="bookmarks-list" id="bookmarksList">
+            <div class="bookmarks-loading">正在加载书签...</div>
         </div>
     </div>
 
@@ -3482,6 +3962,321 @@ function isAudioFile($filename) {
         // 初始化音乐播放列表
         const musicPlaylist = new MusicPlaylist();
 
+        // 书签管理类
+        class BookmarkManager {
+            constructor() {
+                this.bookmarks = [];
+                this.currentAccount = '<?php echo htmlspecialchars($currentAccountKey); ?>';
+                this.currentPath = '<?php echo htmlspecialchars($currentPath); ?>';
+                this.accountName = '<?php echo htmlspecialchars($currentAccount['name']); ?>';
+                this.init();
+            }
+
+            init() {
+                this.loadBookmarks();
+            }
+
+            async loadBookmarks() {
+                try {
+                    const response = await fetch('bookmark_api.php?action=get_all');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.bookmarks = data.bookmarks;
+                        this.updateBookmarksUI();
+                    } else {
+                        throw new Error(data.message || '获取书签失败');
+                    }
+                } catch (error) {
+                    console.error('加载书签失败:', error);
+                    this.showBookmarksEmpty('获取书签失败，请刷新重试');
+                }
+            }
+
+            updateBookmarksUI() {
+                const listElement = document.getElementById('bookmarksList');
+                if (!listElement) return;
+
+                if (this.bookmarks.length === 0) {
+                    this.showBookmarksEmpty();
+                    return;
+                }
+
+                // 生成书签统计
+                const stats = this.generateStats();
+                
+                // 分组书签
+                const groupedBookmarks = this.groupBookmarksByAccount();
+
+                let html = '';
+                
+                // 添加统计卡片
+                html += `
+                    <div class="bookmarks-stats">
+                        <div class="bookmarks-stats-title">总书签数量</div>
+                        <div class="bookmarks-stats-number">${stats.total}</div>
+                    </div>
+                `;
+
+                // 渲染各账户的书签
+                Object.keys(groupedBookmarks).forEach(accountKey => {
+                    const accountBookmarks = groupedBookmarks[accountKey];
+                    if (accountBookmarks.length === 0) return;
+
+                    // 账户名称
+                    const accountData = this.getAccountInfo(accountKey);
+                    html += `<div style="margin: 1.5rem 0 0.75rem 0; padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #4a5568; font-size: 0.9rem;">${accountData.name}</div>`;
+
+                    accountBookmarks.forEach(bookmark => {
+                        const isCurrentPath = (bookmark.account_key === this.currentAccount && bookmark.path === this.currentPath);
+                        const timeAgo = this.timeAgo(bookmark.created_at);
+
+                        html += `
+                            <div class="bookmark-item ${isCurrentPath ? 'current-path' : ''}" onclick="bookmarkManager.navigateToBookmark('${bookmark.account_key}', '${bookmark.path}')">
+                                <div class="bookmark-info">
+                                    <div class="bookmark-icon">${isCurrentPath ? '📍' : '⭐'}</div>
+                                    <div class="bookmark-details">
+                                        <div class="bookmark-name" title="${bookmark.name}">${bookmark.name}</div>
+                                        <div class="bookmark-path" title="${bookmark.path}">${bookmark.path}</div>
+                                        ${bookmark.description ? `<div class="bookmark-description">${bookmark.description}</div>` : ''}
+                                        <div class="bookmark-meta">
+                                            <span class="bookmark-account">${accountData.name}</span>
+                                            <span>${timeAgo}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bookmark-actions">
+                                    <button class="bookmark-action-btn" onclick="event.stopPropagation(); bookmarkManager.editBookmark(${bookmark.id})" title="编辑">✏️</button>
+                                    <button class="bookmark-action-btn" onclick="event.stopPropagation(); bookmarkManager.deleteBookmark(${bookmark.id}, '${bookmark.name}')" title="删除">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+
+                listElement.innerHTML = html;
+            }
+
+            generateStats() {
+                const accountsCount = new Set(this.bookmarks.map(b => b.account_key)).size;
+                return {
+                    total: this.bookmarks.length,
+                    accounts: accountsCount
+                };
+            }
+
+            groupBookmarksByAccount() {
+                const grouped = {};
+                this.bookmarks.forEach(bookmark => {
+                    if (!grouped[bookmark.account_key]) {
+                        grouped[bookmark.account_key] = [];
+                    }
+                    grouped[bookmark.account_key].push(bookmark);
+                });
+
+                // 排序：当前账户在前，然后按名称排序
+                Object.keys(grouped).forEach(accountKey => {
+                    grouped[accountKey].sort((a, b) => {
+                        // 当前路径优先
+                        if (a.account_key === this.currentAccount && a.path === this.currentPath) return -1;
+                        if (b.account_key === this.currentAccount && b.path === this.currentPath) return 1;
+                        
+                        // 然后按创建时间倒序
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    });
+                });
+
+                return grouped;
+            }
+
+            getAccountInfo(accountKey) {
+                // 这里可以从 PHP 传递的账户信息中获取
+                const accounts = <?php echo json_encode($accounts); ?>;
+                return accounts[accountKey] || { name: accountKey };
+            }
+
+            timeAgo(dateString) {
+                const now = new Date();
+                const date = new Date(dateString);
+                const diff = now - date;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+
+                if (minutes < 1) return '刚刚';
+                if (minutes < 60) return `${minutes}分钟前`;
+                if (hours < 24) return `${hours}小时前`;
+                if (days < 30) return `${days}天前`;
+                return date.toLocaleDateString();
+            }
+
+            showBookmarksEmpty(message = null) {
+                const listElement = document.getElementById('bookmarksList');
+                if (!listElement) return;
+
+                const defaultMessage = `
+                    <div class="bookmarks-empty">
+                        <div class="bookmarks-empty-icon">📚</div>
+                        <h4>还没有书签</h4>
+                        <p>点击"⭐ 添加书签"按钮收藏当前路径，方便以后快速访问</p>
+                    </div>
+                `;
+
+                const errorMessage = `
+                    <div class="bookmarks-empty">
+                        <div class="bookmarks-empty-icon">⚠️</div>
+                        <h4>加载失败</h4>
+                        <p>${message}</p>
+                    </div>
+                `;
+
+                listElement.innerHTML = message ? errorMessage : defaultMessage;
+            }
+
+            async navigateToBookmark(accountKey, path) {
+                // 如果是当前账户和路径，不需要跳转
+                if (accountKey === this.currentAccount && path === this.currentPath) {
+                    this.closeBookmarks();
+                    this.showMessage('您已在此路径');
+                    return;
+                }
+
+                // 构建跳转URL
+                const url = `?account=${encodeURIComponent(accountKey)}&path=${encodeURIComponent(path)}`;
+                
+                // 保存当前状态（如播放状态等）
+                if (window.persistentPreview) {
+                    persistentPreview.saveFloatingPreview();
+                    persistentPreview.saveMediaState();
+                }
+
+                this.showMessage('正在跳转...');
+                window.location.href = url;
+            }
+
+            async editBookmark(bookmarkId) {
+                const bookmark = this.bookmarks.find(b => b.id == bookmarkId);
+                if (!bookmark) return;
+
+                document.getElementById('edit_bookmark_id').value = bookmark.id;
+                document.getElementById('edit_bookmark_name').value = bookmark.name;
+                document.getElementById('edit_bookmark_description').value = bookmark.description || '';
+                
+                showModal('editBookmarkModal');
+            }
+
+            async deleteBookmark(bookmarkId, bookmarkName) {
+                if (!confirm(`确定要删除书签"${bookmarkName}"吗？`)) return;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'delete_bookmark');
+                    formData.append('bookmark_id', bookmarkId);
+
+                    const response = await fetch('bookmark_api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showMessage(`书签"${bookmarkName}"已删除`);
+                        this.loadBookmarks(); // 重新加载书签列表
+                    } else {
+                        throw new Error(data.message || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除书签失败:', error);
+                    this.showMessage('删除失败：' + error.message);
+                }
+            }
+
+            openBookmarks() {
+                const panel = document.getElementById('bookmarksPanel');
+                if (panel) {
+                    panel.classList.add('open');
+                    
+                    // 移动端时禁止背景滚动
+                    if (window.innerWidth <= 768) {
+                        document.body.classList.add('bookmarks-open');
+                    }
+                    
+                    // 加载最新书签
+                    this.loadBookmarks();
+                }
+            }
+
+            closeBookmarks() {
+                const panel = document.getElementById('bookmarksPanel');
+                if (panel) {
+                    panel.classList.remove('open');
+                    
+                    // 移动端时恢复背景滚动
+                    if (window.innerWidth <= 768) {
+                        document.body.classList.remove('bookmarks-open');
+                    }
+                }
+            }
+
+            filterBookmarks() {
+                const searchTerm = document.getElementById('bookmarksSearch').value.toLowerCase();
+                const bookmarkItems = document.querySelectorAll('.bookmark-item');
+                
+                bookmarkItems.forEach(item => {
+                    const name = item.querySelector('.bookmark-name').textContent.toLowerCase();
+                    const path = item.querySelector('.bookmark-path').textContent.toLowerCase();
+                    const description = item.querySelector('.bookmark-description');
+                    const desc = description ? description.textContent.toLowerCase() : '';
+                    
+                    if (name.includes(searchTerm) || path.includes(searchTerm) || desc.includes(searchTerm)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+
+            showMessage(message) {
+                // 创建临时消息提示
+                const messageDiv = document.createElement('div');
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: 25px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    max-width: 300px;
+                    word-wrap: break-word;
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255,255,255,0.2);
+                    animation: slideInRight 0.3s ease-out;
+                `;
+                
+                messageDiv.textContent = message;
+                document.body.appendChild(messageDiv);
+
+                // 3秒后移除
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.style.animation = 'slideOutRight 0.3s ease-in';
+                        setTimeout(() => {
+                            messageDiv.parentNode.removeChild(messageDiv);
+                        }, 300);
+                    }
+                }, 3000);
+            }
+        }
+
+        // 初始化书签管理器
+        const bookmarkManager = new BookmarkManager();
+
         // 播放列表相关的全局函数
         function addToPlaylist(path, name) {
             // 检查是否已在播放列表中
@@ -3547,6 +4342,19 @@ function isAudioFile($filename) {
             const rect = progressBar.getBoundingClientRect();
             const percentage = ((event.clientX - rect.left) / rect.width) * 100;
             musicPlaylist.seekTo(percentage);
+        }
+
+        // 书签相关的全局函数
+        function showBookmarksPanel() {
+            bookmarkManager.openBookmarks();
+        }
+
+        function closeBookmarks() {
+            bookmarkManager.closeBookmarks();
+        }
+
+        function filterBookmarks() {
+            bookmarkManager.filterBookmarks();
         }
 
         // 添加CSS动画
@@ -4432,10 +5240,25 @@ function isAudioFile($filename) {
                         e.preventDefault();
                         togglePlaylist();
                         break;
+                    case 'b':
+                        e.preventDefault();
+                        showBookmarksPanel();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        showModal('addBookmarkModal');
+                        break;
                 }
             }
             
             if (e.key === 'Escape') {
+                // 检查书签面板是否打开
+                const bookmarksPanel = document.getElementById('bookmarksPanel');
+                if (bookmarksPanel && bookmarksPanel.classList.contains('open')) {
+                    closeBookmarks();
+                    return;
+                }
+                
                 // 检查播放列表是否打开
                 const playlistPanel = document.getElementById('playlistPanel');
                 if (playlistPanel && playlistPanel.classList.contains('open')) {
@@ -4899,6 +5722,9 @@ function isAudioFile($filename) {
                 
                 // 移除播放列表打开时的body类
                 document.body.classList.remove('playlist-open');
+                
+                // 移除书签面板打开时的body类
+                document.body.classList.remove('bookmarks-open');
             }
             
             // 处理显示中的模态框的类名
