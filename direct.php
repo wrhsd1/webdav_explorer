@@ -1,12 +1,28 @@
 <?php
 require_once 'includes/auth.php';
-require_once 'includes/config.php';
+require_once 'includes/user.php';
 require_once 'includes/webdav.php';
 
 Auth::requireLogin();
 
-$config = Config::getInstance();
-$accounts = $config->getAccounts();
+$userManager = new User();
+$currentUserId = Auth::getCurrentUserId();
+
+// 获取用户的WebDAV配置
+$userWebdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
+
+// 将配置转换为关联数组
+$accounts = [];
+foreach ($userWebdavConfigs as $config) {
+    $accounts[$config['account_key']] = [
+        'key' => $config['account_key'],
+        'name' => $config['account_name'],
+        'host' => $config['host'],
+        'username' => $config['username'],
+        'password' => $config['password'],
+        'path' => $config['path']
+    ];
+}
 
 // 获取参数
 $accountKey = $_GET['account'] ?? '';
@@ -14,10 +30,11 @@ $filePath = $_GET['path'] ?? '';
 
 if (empty($accountKey) || empty($filePath) || !isset($accounts[$accountKey])) {
     http_response_code(404);
-    exit('文件不存在');
+    exit('文件不存在或无权限访问');
 }
 
 $account = $accounts[$accountKey];
+$fileName = basename($filePath);
 
 try {
     $webdav = new WebDAVClient(
@@ -27,8 +44,21 @@ try {
         $account['path']
     );
     
+    // 读取配置文件获取直链域名
+    $envFile = __DIR__ . '/.env';
+    $directLinkDomain = 'http://localhost';
+    if (file_exists($envFile)) {
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            if (strpos($line, 'DIRECT_LINK_DOMAIN=') === 0) {
+                $directLinkDomain = trim(str_replace('DIRECT_LINK_DOMAIN=', '', $line));
+                break;
+            }
+        }
+    }
+    
     // 生成中转链接
-    $transferUrl = $config->get('DIRECT_LINK_DOMAIN', 'http://localhost') . 
+    $transferUrl = $directLinkDomain . 
                    '/transfer.php?account=' . urlencode($accountKey) . 
                    '&path=' . urlencode($filePath);
     

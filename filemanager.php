@@ -1,13 +1,29 @@
 <?php
 require_once 'includes/auth.php';
-require_once 'includes/config.php';
+require_once 'includes/user.php';
 require_once 'includes/webdav.php';
 require_once 'includes/bookmark.php';
 
 Auth::requireLogin();
 
-$config = Config::getInstance();
-$accounts = $config->getAccounts();
+$userManager = new User();
+$currentUserId = Auth::getCurrentUserId();
+
+// 获取用户的WebDAV配置
+$userWebdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
+
+// 将配置转换为关联数组，以便兼容原有代码
+$accounts = [];
+foreach ($userWebdavConfigs as $config) {
+    $accounts[$config['account_key']] = [
+        'key' => $config['account_key'],
+        'name' => $config['account_name'],
+        'host' => $config['host'],
+        'username' => $config['username'],
+        'password' => $config['password'],
+        'path' => $config['path']
+    ];
+}
 
 // 获取当前账户
 $currentAccountKey = $_GET['account'] ?? '';
@@ -43,7 +59,7 @@ if ($_POST) {
                 $bookmarkName = $_POST['bookmark_name'] ?? '';
                 $bookmarkDescription = $_POST['bookmark_description'] ?? '';
                 if (!empty($bookmarkName)) {
-                    $bookmarkManager->addBookmark($bookmarkName, $currentAccountKey, $currentPath, $bookmarkDescription);
+                    $bookmarkManager->addBookmark($currentUserId, $bookmarkName, $currentAccountKey, $currentPath, $bookmarkDescription);
                     $message = "书签 '{$bookmarkName}' 已添加";
                 }
                 break;
@@ -51,8 +67,8 @@ if ($_POST) {
             case 'delete_bookmark':
                 $bookmarkId = $_POST['bookmark_id'] ?? '';
                 if (!empty($bookmarkId)) {
-                    $bookmark = $bookmarkManager->getBookmarkById($bookmarkId);
-                    if ($bookmark && $bookmarkManager->deleteBookmark($bookmarkId)) {
+                    $bookmark = $bookmarkManager->getBookmarkById($currentUserId, $bookmarkId);
+                    if ($bookmark && $bookmarkManager->deleteBookmark($currentUserId, $bookmarkId)) {
                         $message = "书签 '{$bookmark['name']}' 已删除";
                     }
                 }
@@ -63,8 +79,8 @@ if ($_POST) {
                 $bookmarkName = $_POST['bookmark_name'] ?? '';
                 $bookmarkDescription = $_POST['bookmark_description'] ?? '';
                 if (!empty($bookmarkId) && !empty($bookmarkName)) {
-                    $bookmark = $bookmarkManager->getBookmarkById($bookmarkId);
-                    if ($bookmark && $bookmarkManager->updateBookmark($bookmarkId, $bookmarkName, $bookmarkDescription)) {
+                    $bookmark = $bookmarkManager->getBookmarkById($currentUserId, $bookmarkId);
+                    if ($bookmark && $bookmarkManager->updateBookmark($currentUserId, $bookmarkId, $bookmarkName, $bookmarkDescription)) {
                         $message = "书签已更新";
                     }
                 }

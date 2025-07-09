@@ -1,17 +1,21 @@
 <?php
 require_once 'includes/auth.php';
-require_once 'includes/config.php';
+require_once 'includes/user.php';
 require_once 'includes/bookmark.php';
 
 Auth::requireLogin();
 
-$config = Config::getInstance();
-$accounts = $config->getAccounts();
+$userManager = new User();
 $bookmarkManager = new Bookmark();
+$currentUserId = Auth::getCurrentUserId();
+$currentUser = Auth::getCurrentUser();
+
+// 获取当前用户的WebDAV配置
+$userWebdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
 
 // 获取书签统计
 try {
-    $bookmarkStats = $bookmarkManager->getBookmarkStats();
+    $bookmarkStats = $bookmarkManager->getBookmarkStats($currentUserId);
 } catch (Exception $e) {
     $bookmarkStats = ['total' => 0, 'accounts' => 0, 'latest' => null];
 }
@@ -48,6 +52,26 @@ try {
             color: #333;
         }
         
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-info {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .admin-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
         .header-actions {
             display: flex;
             gap: 1rem;
@@ -71,6 +95,11 @@ try {
         .btn-primary {
             background: #007bff;
             color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
         }
         
         .btn-secondary {
@@ -464,6 +493,12 @@ try {
 <body>
     <div class="header">
         <h1>WebDAV管理系统</h1>
+        <div class="header-info">
+            <span class="user-info">欢迎，<?php echo htmlspecialchars($currentUser['username']); ?></span>
+            <?php if (Auth::isAdmin()): ?>
+                <span class="admin-badge">管理员</span>
+            <?php endif; ?>
+        </div>
         <div class="header-actions">
             <button onclick="showBookmarksPanel()" class="btn btn-bookmark" id="bookmarksBtn">
                 📚 书签列表
@@ -471,7 +506,10 @@ try {
                     <span class="bookmark-count"><?php echo $bookmarkStats['total']; ?></span>
                 <?php endif; ?>
             </button>
-            <a href="admin.php" class="btn btn-primary">后台管理</a>
+            <a href="user_settings.php" class="btn btn-primary">个人设置</a>
+            <?php if (Auth::isAdmin()): ?>
+                <a href="super_admin.php" class="btn btn-warning">用户管理</a>
+            <?php endif; ?>
             <a href="logout.php" class="btn btn-secondary">退出登录</a>
         </div>
     </div>
@@ -482,24 +520,24 @@ try {
             <p>选择一个WebDAV账户开始管理您的文件</p>
         </div>
         
-        <?php if (empty($accounts)): ?>
+        <?php if (empty($userWebdavConfigs)): ?>
             <div class="no-accounts">
                 <h3>暂无WebDAV账户</h3>
-                <p>请前往后台管理添加WebDAV账户配置</p>
-                <a href="admin.php" class="btn btn-primary">前往后台管理</a>
+                <p>请前往个人设置添加WebDAV账户配置</p>
+                <a href="user_settings.php" class="btn btn-primary">前往个人设置</a>
             </div>
         <?php else: ?>
             <div class="account-grid">
-                <?php foreach ($accounts as $account): ?>
+                <?php foreach ($userWebdavConfigs as $config): ?>
                     <div class="account-card">
-                        <div class="account-name"><?php echo htmlspecialchars($account['name']); ?></div>
+                        <div class="account-name"><?php echo htmlspecialchars($config['account_name']); ?></div>
                         <div class="account-info">
-                            <div><strong>服务器:</strong> <?php echo htmlspecialchars($account['host']); ?></div>
-                            <div><strong>用户名:</strong> <?php echo htmlspecialchars($account['username']); ?></div>
-                            <div><strong>路径:</strong> <?php echo htmlspecialchars($account['path']); ?></div>
+                            <div><strong>服务器:</strong> <?php echo htmlspecialchars($config['host']); ?></div>
+                            <div><strong>用户名:</strong> <?php echo htmlspecialchars($config['username']); ?></div>
+                            <div><strong>路径:</strong> <?php echo htmlspecialchars($config['path']); ?></div>
                         </div>
                         <div class="account-actions">
-                            <a href="filemanager.php?account=<?php echo urlencode($account['key']); ?>" class="btn btn-primary">打开文件管理器</a>
+                            <a href="filemanager.php?account=<?php echo urlencode($config['account_key']); ?>" class="btn btn-primary">打开文件管理器</a>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -532,7 +570,7 @@ try {
         class BookmarkManager {
             constructor() {
                 this.bookmarks = [];
-                this.accounts = <?php echo json_encode($accounts); ?>;
+                this.userWebdavConfigs = <?php echo json_encode($userWebdavConfigs); ?>;
                 this.init();
             }
 
@@ -645,7 +683,8 @@ try {
             }
 
             getAccountInfo(accountKey) {
-                return this.accounts[accountKey] || { name: accountKey };
+                const config = this.userWebdavConfigs.find(c => c.account_key === accountKey);
+                return config ? { name: config.account_name } : { name: accountKey };
             }
 
             timeAgo(dateString) {

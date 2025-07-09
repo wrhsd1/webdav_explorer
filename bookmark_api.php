@@ -8,11 +8,12 @@ header('Content-Type: application/json');
 
 try {
     $bookmarkManager = new Bookmark();
+    $currentUserId = Auth::getCurrentUserId();
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
     
     switch ($action) {
         case 'get_all':
-            $bookmarks = $bookmarkManager->getAllBookmarks();
+            $bookmarks = $bookmarkManager->getAllBookmarks($currentUserId);
             echo json_encode(['success' => true, 'bookmarks' => $bookmarks]);
             break;
             
@@ -21,7 +22,7 @@ try {
             if (empty($accountKey)) {
                 throw new Exception('账户参数不能为空');
             }
-            $bookmarks = $bookmarkManager->getBookmarksByAccount($accountKey);
+            $bookmarks = $bookmarkManager->getBookmarksByAccount($currentUserId, $accountKey);
             echo json_encode(['success' => true, 'bookmarks' => $bookmarks]);
             break;
             
@@ -35,7 +36,7 @@ try {
                 throw new Exception('书签名称、账户和路径不能为空');
             }
             
-            $id = $bookmarkManager->addBookmark($name, $accountKey, $path, $description);
+            $id = $bookmarkManager->addBookmark($currentUserId, $name, $accountKey, $path, $description);
             echo json_encode(['success' => true, 'id' => $id, 'message' => '书签添加成功']);
             break;
             
@@ -45,7 +46,7 @@ try {
                 throw new Exception('书签ID不能为空');
             }
             
-            $success = $bookmarkManager->deleteBookmark($id);
+            $success = $bookmarkManager->deleteBookmark($currentUserId, $id);
             if ($success) {
                 echo json_encode(['success' => true, 'message' => '书签删除成功']);
             } else {
@@ -62,7 +63,7 @@ try {
                 throw new Exception('书签ID和名称不能为空');
             }
             
-            $success = $bookmarkManager->updateBookmark($id, $name, $description);
+            $success = $bookmarkManager->updateBookmark($currentUserId, $id, $name, $description);
             if ($success) {
                 echo json_encode(['success' => true, 'message' => '书签更新成功']);
             } else {
@@ -76,12 +77,12 @@ try {
                 throw new Exception('搜索关键词不能为空');
             }
             
-            $bookmarks = $bookmarkManager->searchBookmarks($keyword);
+            $bookmarks = $bookmarkManager->searchBookmarks($currentUserId, $keyword);
             echo json_encode(['success' => true, 'bookmarks' => $bookmarks]);
             break;
             
         case 'get_stats':
-            $stats = $bookmarkManager->getBookmarkStats();
+            $stats = $bookmarkManager->getBookmarkStats($currentUserId);
             echo json_encode(['success' => true, 'stats' => $stats]);
             break;
             

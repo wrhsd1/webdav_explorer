@@ -1,12 +1,28 @@
 <?php
 require_once 'includes/auth.php';
-require_once 'includes/config.php';
+require_once 'includes/user.php';
 require_once 'includes/webdav.php';
 
 Auth::requireLogin();
 
-$config = Config::getInstance();
-$accounts = $config->getAccounts();
+$userManager = new User();
+$currentUserId = Auth::getCurrentUserId();
+
+// 获取用户的WebDAV配置
+$userWebdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
+
+// 将配置转换为关联数组
+$accounts = [];
+foreach ($userWebdavConfigs as $config) {
+    $accounts[$config['account_key']] = [
+        'key' => $config['account_key'],
+        'name' => $config['account_name'],
+        'host' => $config['host'],
+        'username' => $config['username'],
+        'password' => $config['password'],
+        'path' => $config['path']
+    ];
+}
 
 // 获取参数
 $accountKey = $_GET['account'] ?? '';
@@ -14,7 +30,7 @@ $filePath = $_GET['path'] ?? '';
 
 if (empty($accountKey) || empty($filePath) || !isset($accounts[$accountKey])) {
     http_response_code(404);
-    exit('文件不存在');
+    exit('文件不存在或无权限访问');
 }
 
 $account = $accounts[$accountKey];
