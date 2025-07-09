@@ -92,18 +92,6 @@
 
 `.env` 文件配置示例：
 ```env
-# 管理员密码
-ADMIN_PASSWORD=your_strong_password
-
-# WebDAV账户配置
-WEBDAV_ACCOUNTS=main,backup
-
-# 主账户
-WEBDAV_MAIN_NAME=我的云盘
-WEBDAV_MAIN_HOST=https://webdav.example.com
-WEBDAV_MAIN_USERNAME=username
-WEBDAV_MAIN_PASSWORD=password
-WEBDAV_MAIN_PATH=/files
 
 # 直链域名
 DIRECT_LINK_DOMAIN=https://yourdomain.com
