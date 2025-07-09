@@ -6,4 +6,9 @@ Thumbs.db
 /cache/
 /tmp/
 /MD/
-/data/
+
+# 忽略data目录下的数据库和日志文件
+/data/*.db
+/data/*.log
+/data/*.sqlite
+/data/*.sqlite3

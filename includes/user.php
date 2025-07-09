@@ -49,7 +49,7 @@ class User {
      */
     public function getUserById($userId) {
         try {
-            $stmt = $this->db->prepare("SELECT id, username, is_admin, created_at FROM users WHERE id = ?");
+            $stmt = $this->db->prepare("SELECT id, username, is_admin, api_key, created_at FROM users WHERE id = ?");
             $stmt->execute([$userId]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -62,7 +62,7 @@ class User {
      */
     public function getAllUsers() {
         try {
-            $stmt = $this->db->prepare("SELECT id, username, is_admin, created_at FROM users ORDER BY created_at DESC");
+            $stmt = $this->db->prepare("SELECT id, username, is_admin, api_key, created_at FROM users ORDER BY created_at DESC");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -205,6 +205,41 @@ class User {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new Exception('获取WebDAV配置失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 更新用户API密钥
+     */
+    public function updateApiKey($userId, $apiKey) {
+        try {
+            $stmt = $this->db->prepare("UPDATE users SET api_key = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+            $stmt->execute([$apiKey, $userId]);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            throw new Exception('更新API密钥失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 通过API密钥获取用户信息
+     */
+    public function getUserByApiKey($apiKey) {
+        try {
+            // 解析API密钥格式：用户名_密钥后缀
+            $parts = explode('_', $apiKey, 2);
+            if (count($parts) !== 2) {
+                return false;
+            }
+            
+            $username = $parts[0];
+            $userKey = $parts[1];
+            
+            $stmt = $this->db->prepare("SELECT id, username, is_admin, api_key FROM users WHERE username = ? AND api_key = ?");
+            $stmt->execute([$username, $userKey]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception('API密钥验证失败: ' . $e->getMessage());
         }
     }
 }

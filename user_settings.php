@@ -59,6 +59,26 @@ if ($_POST) {
                     }
                     break;
                     
+                case 'update_api_key':
+                    $apiKey = trim($_POST['api_key'] ?? '');
+                    
+                    if (empty($apiKey)) {
+                        $error = 'API密钥后缀不能为空';
+                    } elseif (strlen($apiKey) < 6) {
+                        $error = 'API密钥后缀长度至少6位';
+                    } elseif (!preg_match('/^[a-zA-Z0-9]+$/', $apiKey)) {
+                        $error = 'API密钥后缀只能包含字母和数字';
+                    } else {
+                        if ($userManager->updateApiKey($currentUserId, $apiKey)) {
+                            $message = 'API密钥更新成功';
+                            // 重新获取用户信息
+                            $currentUser = Auth::getCurrentUser();
+                        } else {
+                            $error = 'API密钥更新失败';
+                        }
+                    }
+                    break;
+                    
                 case 'edit_webdav':
                     $configId = $_POST['config_id'] ?? '';
                     $accountName = trim($_POST['account_name'] ?? '');
@@ -485,6 +505,12 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
                 <span>WebDAV账户数量:</span>
                 <span><?php echo count($webdavConfigs); ?> 个</span>
             </div>
+            <div class="user-stat">
+                <span>当前API密钥:</span>
+                <span style="font-family: monospace; background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px;">
+                    <?php echo htmlspecialchars($currentUser['username'] . '_' . $currentUser['api_key']); ?>
+                </span>
+            </div>
         </div>
         
         <!-- 修改密码 -->
@@ -507,6 +533,41 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">修改密码</button>
+            </form>
+        </div>
+        
+        <!-- API密钥管理 -->
+        <div class="card">
+            <h2>API密钥管理</h2>
+            <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <h4 style="color: #1976d2; margin-bottom: 0.5rem;">📋 API使用说明</h4>
+                <ul style="margin: 0.5rem 0 0 1.5rem; color: #424242; font-size: 0.9rem;">
+                    <li>API密钥格式：<code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.4rem; border-radius: 3px;">用户名_密钥后缀</code></li>
+                    <li>当前完整密钥：<code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.4rem; border-radius: 3px;" id="fullApiKeyDisplay"><?php echo htmlspecialchars($currentUser['username'] . '_' . $currentUser['api_key']); ?></code></li>
+                    <li>上传API：<code>POST /api.php</code> - 参数：apikey, webdav_account, file_path, file(或file_url)</li>
+                    <li>下载API：<code>GET /api.php</code> - 参数：apikey, webdav_account, file_path</li>
+                    <li><a href="api_docs.php" target="_blank" style="color: #1976d2; text-decoration: none;">📖 查看完整API文档</a></li>
+                </ul>
+                <div style="margin-top: 1rem; padding: 1rem; background: #f0f8f0; border: 1px solid #4caf50; border-radius: 5px;">
+                    <strong style="color: #2e7d32;">💡 提示：</strong> 
+                    <span style="color: #424242;">配置API密钥后，可以使用下方的"🧪 测试API"按钮测试API功能</span>
+                </div>
+            </div>
+            
+            <form method="POST">
+                <input type="hidden" name="action" value="update_api_key">
+                <div class="form-group">
+                    <label for="api_key">API密钥后缀 (仅字母数字，至少6位)</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: #666; font-weight: 500;"><?php echo htmlspecialchars($currentUser['username']); ?>_</span>
+                        <input type="text" id="api_key" name="api_key" value="<?php echo htmlspecialchars($currentUser['api_key']); ?>" 
+                               pattern="[a-zA-Z0-9]{6,}" title="只能包含字母和数字，至少6位" required style="flex: 1;">
+                        <button type="button" onclick="generateRandomApiKey()" class="btn btn-secondary">生成随机</button>
+                        <button type="button" onclick="copyApiKey()" class="btn btn-success">复制完整密钥</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">更新API密钥</button>
+                <a href="api_test.php" class="btn btn-success" style="margin-left: 0.5rem;">🧪 测试API</a>
             </form>
         </div>
         
@@ -745,6 +806,99 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
                 this.setCustomValidity('');
             }
         });
+        
+        // 生成随机API密钥
+        function generateRandomApiKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < 12; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('api_key').value = result;
+            updateFullApiKeyDisplay();
+        }
+        
+        // 复制完整API密钥到剪贴板
+        function copyApiKey() {
+            const username = '<?php echo htmlspecialchars($currentUser['username']); ?>';
+            const apiKeySuffix = document.getElementById('api_key').value;
+            const fullApiKey = username + '_' + apiKeySuffix;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullApiKey).then(function() {
+                    showMessage('API密钥已复制到剪贴板！');
+                }).catch(function(err) {
+                    fallbackCopyToClipboard(fullApiKey);
+                });
+            } else {
+                fallbackCopyToClipboard(fullApiKey);
+            }
+        }
+        
+        // 备用复制方法
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showMessage('API密钥已复制到剪贴板！');
+            } catch (err) {
+                showMessage('复制失败，请手动复制：' + text);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        // 更新完整API密钥显示
+        function updateFullApiKeyDisplay() {
+            const username = '<?php echo htmlspecialchars($currentUser['username']); ?>';
+            const apiKeySuffix = document.getElementById('api_key').value;
+            const fullApiKey = username + '_' + apiKeySuffix;
+            
+            const displayElement = document.getElementById('fullApiKeyDisplay');
+            if (displayElement) {
+                displayElement.textContent = fullApiKey;
+            }
+        }
+        
+        // 监听API密钥输入变化
+        document.getElementById('api_key').addEventListener('input', updateFullApiKeyDisplay);
+        
+        // 显示消息提示
+        function showMessage(message, type = 'success') {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#28a745' : '#dc3545'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 5px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-size: 0.9rem;
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+
+            // 3秒后移除
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 3000);
+        }
     </script>
 </body>
 </html>

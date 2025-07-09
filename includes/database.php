@@ -35,10 +35,18 @@ class Database {
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             is_admin INTEGER DEFAULT 0,
+            api_key TEXT DEFAULT '112233',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )";
         $this->pdo->exec($sql);
+        
+        // 检查并添加api_key字段（兼容已有数据库）
+        try {
+            $this->pdo->exec("ALTER TABLE users ADD COLUMN api_key TEXT DEFAULT '112233'");
+        } catch (PDOException $e) {
+            // 字段已存在，忽略错误
+        }
         
         // 用户WebDAV配置表
         $sql = "CREATE TABLE IF NOT EXISTS user_webdav_configs (

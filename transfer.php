@@ -7,26 +7,43 @@ require_once 'includes/webdav.php';
 // 获取参数
 $accountKey = $_GET['account'] ?? '';
 $filePath = $_GET['path'] ?? '';
+$apiKey = $_GET['apikey'] ?? '';
 
 if (empty($accountKey) || empty($filePath)) {
     http_response_code(404);
     exit('参数错误');
 }
 
-// 检查用户会话
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(403);
-    exit('需要登录才能访问文件');
-}
-
 $userManager = new User();
-$currentUserId = $_SESSION['user_id'];
+$currentUserId = null;
+$accounts = [];
+
+// 检查用户会话或API密钥
+if (!empty($apiKey)) {
+    // 通过API密钥验证
+    try {
+        $user = $userManager->getUserByApiKey($apiKey);
+        if (!$user) {
+            http_response_code(403);
+            exit('API密钥无效');
+        }
+        $currentUserId = $user['id'];
+    } catch (Exception $e) {
+        http_response_code(403);
+        exit('API密钥验证失败');
+    }
+} elseif (isset($_SESSION['user_id'])) {
+    // 通过会话验证
+    $currentUserId = $_SESSION['user_id'];
+} else {
+    http_response_code(403);
+    exit('需要登录或提供有效的API密钥才能访问文件');
+}
 
 // 获取用户的WebDAV配置
 $userWebdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
 
 // 将配置转换为关联数组
-$accounts = [];
 foreach ($userWebdavConfigs as $config) {
     $accounts[$config['account_key']] = [
         'key' => $config['account_key'],

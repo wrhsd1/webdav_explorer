@@ -1,0 +1,11 @@
+# 禁止直接访问数据文件
+<Files "*">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# 允许访问.htaccess文件本身（供Apache读取）
+<Files ".htaccess">
+    Order Allow,Deny
+    Allow from all
+</Files>
