@@ -441,7 +441,7 @@
                 "size": 2048576,
                 "modified": "2025-01-01T09:15:00Z",
                 "file_type": "document",
-                "direct_link": "https://yourdomain.com/transfer.php?account=account1&path=documents%2Freport.pdf"
+                "direct_link": "https://yourdomain.com/transfer.php?account=account1&path=%2Fdocuments%2Freport.pdf"
             }
         ],
         "total_count": 2,

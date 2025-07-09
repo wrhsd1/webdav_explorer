@@ -166,7 +166,7 @@ class WebDAVClient {
                 
                 $items[] = [
                     'name' => $itemName,
-                    'path' => $currentPath . $itemName . ($isCollection ? '/' : ''),
+                    'path' => rtrim($currentPath, '/') . '/' . $itemName . ($isCollection ? '/' : ''),
                     'is_dir' => $isCollection,
                     'size' => $contentLength ? (int)$contentLength->textContent : 0,
                     'modified' => $lastModified ? $lastModified->textContent : '',
