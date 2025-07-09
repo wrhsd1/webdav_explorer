@@ -279,12 +279,92 @@ function isAudioFile($filename) {
             color: #1a202c;
             font-size: 1.5rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .header-icon {
+            font-size: 1.5rem;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
         }
         
         .header-actions {
             display: flex;
             gap: 1rem;
             align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .account-info {
+            font-size: 0.875rem;
+        }
+        
+        .btn-music {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .btn-music:hover {
+            background: #5a67d8;
+            transform: scale(1.05);
+        }
+        
+        .btn-music.playing {
+            background: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.3);
+        }
+        
+        .btn-music.playing:hover {
+            background: #38a169;
+        }
+        
+        .btn-music .music-icon {
+            font-size: 1.2rem;
+            animation: musicPulse 2s ease-in-out infinite;
+        }
+        
+        .btn-music.playing .music-icon {
+            animation: musicBounce 1s ease-in-out infinite;
+        }
+        
+        .btn-music .music-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e53e3e;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+        
+        @keyframes musicPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes musicBounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-3px); }
+            60% { transform: translateY(-1px); }
         }
         
         .btn {
@@ -559,15 +639,433 @@ function isAudioFile($filename) {
             transform: scale(1.1);
         }
         
+        
+        /* 播放列表相关样式 */
         .playlist-controls {
             background: white;
-            padding: 1rem;
+            padding: 0.75rem;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             gap: 0.5rem;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            justify-content: center;
+            overflow-x: auto;
         }
         
+        .playlist-controls .btn {
+            min-width: 36px;
+            height: 36px;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        /* 缩小音乐播放器控制区域 */
+        .music-player {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+        }
+        
+        .music-player-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .music-player-icon {
+            font-size: 2rem;
+            animation: musicRotate 4s linear infinite;
+        }
+        
+        .music-player-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .music-player-artist {
+            opacity: 0.8;
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .music-player-progress {
+            background: rgba(255,255,255,0.2);
+            height: 4px;
+            border-radius: 2px;
+            margin: 0.75rem 0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .music-player-time {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.9;
+        }
+        
+        .music-player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+        
+        .music-control-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        .music-control-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+        
+        .music-control-btn.primary {
+            width: 48px;
+            height: 48px;
+            font-size: 1.4rem;
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .music-control-btn.primary:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.15);
+        }
+        
+        .music-volume-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* 保存播放列表预览样式 */
+        #save_playlist_preview {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        #save_playlist_preview::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #save_playlist_preview::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        #save_playlist_preview::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        #save_playlist_preview::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* 播放列表加载界面样式 */
+        #playlist_list_container {
+            background: white;
+        }
+        
+        #playlist_list_container .playlist-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+        }
+        
+        #playlist_list_container .playlist-item:last-child {
+            border-bottom: none;
+        }
+        
+        #playlist_list_container .playlist-item:hover {
+            background: #f8fafc;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #playlist_list_container .playlist-item .playlist-item-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        #playlist_list_container .playlist-item:hover .playlist-item-actions {
+            opacity: 1;
+        }
+        
+        /* 移动端播放列表控制优化 */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 6rem; /* 为底部操作栏和播放器留空间 */
+            }
+            
+            .playlist-controls {
+                padding: 0.75rem;
+                display: flex;
+                flex-direction: row;
+                gap: 0.5rem;
+                justify-content: space-around;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            
+            .playlist-controls .btn {
+                min-width: 40px;
+                height: 40px;
+                padding: 0.5rem;
+                font-size: 1.1rem;
+                border-radius: 10px;
+                flex-shrink: 0;
+            }
+            
+            /* 移动端音乐播放器优化 */
+            .music-player {
+                padding: 1rem;
+                position: relative;
+                z-index: 150;
+            }
+            
+            .music-player-info {
+                margin-bottom: 0.75rem;
+                gap: 0.75rem;
+            }
+            
+            .music-player-icon {
+                font-size: 2rem;
+            }
+            
+            .music-player-title {
+                font-size: 0.95rem;
+            }
+            
+            .music-player-artist {
+                font-size: 0.8rem;
+            }
+            
+            .music-player-progress {
+                margin: 0.75rem 0;
+                height: 4px;
+            }
+            
+            .music-player-time {
+                font-size: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .music-player-controls {
+                gap: 0.75rem;
+            }
+            
+            .music-control-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.3rem;
+            }
+            
+            .music-control-btn.primary {
+                width: 52px;
+                height: 52px;
+                font-size: 1.6rem;
+            }
+            
+            .music-volume-control {
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+            }
+            
+            /* 确保播放器在底部操作栏上方 */
+            .playlist-panel.open {
+                bottom: 0;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 480px) {
+            body {
+                padding-bottom: 6.5rem; /* 为底部操作栏和播放器留更多空间 */
+            }
+            
+            .playlist-controls {
+                padding: 0.5rem;
+                gap: 0.4rem;
+            }
+            
+            .playlist-controls .btn {
+                min-width: 36px;
+                height: 36px;
+                font-size: 1rem;
+                border-radius: 8px;
+            }
+            
+            .music-player {
+                padding: 0.75rem;
+            }
+            
+            .music-player-icon {
+                font-size: 1.8rem;
+            }
+            
+            .music-player-title {
+                font-size: 0.9rem;
+            }
+            
+            .music-player-artist {
+                font-size: 0.75rem;
+            }
+            
+            .music-player-controls {
+                gap: 0.5rem;
+            }
+            
+            .music-control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+            
+            .music-control-btn.primary {
+                width: 48px;
+                height: 48px;
+                font-size: 1.4rem;
+            }
+            
+            .music-volume-control {
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+            }
+            
+            /* 模态框内的播放列表项目 */
+            #playlist_list_container .playlist-item {
+                padding: 1rem;
+            }
+            
+            #playlist_list_container .playlist-item-icon {
+                font-size: 1.8rem;
+                min-width: 2.5rem;
+            }
+            
+            #playlist_list_container .playlist-item-name {
+                font-size: 0.95rem;
+            }
+            
+            #playlist_list_container .playlist-item-path {
+                font-size: 0.8rem;
+            }
+            
+            #playlist_list_container .playlist-item-actions {
+                gap: 0.25rem;
+            }
+            
+            #playlist_list_container .playlist-item-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 播放列表模态框移动端优化 */
+        @media (max-width: 768px) {
+            #savePlaylistModal .modal-content,
+            #loadPlaylistModal .modal-content,
+            #renamePlaylistModal .modal-content {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            #save_playlist_preview {
+                max-height: 150px;
+                font-size: 0.85rem;
+            }
+            
+            #playlist_list_container {
+                max-height: 60vh;
+            }
+            
+            /* 模态框表单优化 */
+            #savePlaylistModal .form-group,
+            #loadPlaylistModal .form-group,
+            #renamePlaylistModal .form-group {
+                margin-bottom: 1rem;
+            }
+            
+            #savePlaylistModal .form-group input,
+            #loadPlaylistModal .form-group input,
+            #renamePlaylistModal .form-group input {
+                padding: 1rem;
+                font-size: 1rem;
+                border-radius: 8px;
+            }
+            
+            #savePlaylistModal .modal-actions,
+            #loadPlaylistModal .modal-actions,
+            #renamePlaylistModal .modal-actions {
+                margin-top: 1.5rem;
+                gap: 0.75rem;
+            }
+            
+            #savePlaylistModal .modal-actions .btn,
+            #loadPlaylistModal .modal-actions .btn,
+            #renamePlaylistModal .modal-actions .btn {
+                flex: 1;
+                padding: 1rem;
+                font-size: 1rem;
+                border-radius: 8px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #savePlaylistModal #playlist_list_container {
+                max-height: 50vh;
+            }
+            
+            #savePlaylistModal #save_playlist_preview {
+                max-height: 120px;
+                font-size: 0.8rem;
+            }
+            
+            #loadPlaylistModal #playlist_list_container {
+                max-height: 50vh;
+            }
+        }
+
         .playlist-list {
             flex: 1;
             overflow-y: auto;
@@ -1120,96 +1618,12 @@ function isAudioFile($filename) {
             min-width: 0;
         }
         
-        .music-player-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .music-player-artist {
-            opacity: 0.8;
-            font-size: 0.9rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .music-player-progress {
-            background: rgba(255,255,255,0.2);
-            height: 6px;
-            border-radius: 3px;
-            margin: 1rem 0;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        
         .music-player-progress-bar {
             background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
             height: 100%;
             width: 0%;
             transition: width 0.3s ease;
-            border-radius: 3px;
-        }
-        
-        .music-player-time {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            margin-bottom: 1rem;
-            opacity: 0.9;
-        }
-        
-        .music-player-controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-        }
-        
-        .music-control-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.1);
-        }
-        
-        .music-control-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.1);
-        }
-        
-        .music-control-btn.primary {
-            width: 60px;
-            height: 60px;
-            font-size: 1.8rem;
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .music-control-btn.primary:hover {
-            background: rgba(255,255,255,0.4);
-            transform: scale(1.15);
-        }
-        
-        .music-volume-control {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-radius: 2px;
         }
         
         .music-volume-slider {
@@ -1282,83 +1696,8 @@ function isAudioFile($filename) {
                 font-size: 0.6rem;
             }
             
-            .music-player {
-                padding: 1rem;
-            }
-            
-            .music-player-controls {
-                gap: 0.75rem;
-            }
-            
-            .music-control-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.3rem;
-            }
-            
-            .music-control-btn.primary {
-                width: 55px;
-                height: 55px;
-                font-size: 1.6rem;
-            }
-            
             body.playlist-open {
                 overflow: hidden;
-            }
-            
-            /* 移动端播放列表适配 */
-            .playlist-controls {
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-            
-            .playlist-controls .btn {
-                flex: 1;
-                padding: 0.75rem;
-            }
-            
-            .playlist-item {
-                padding: 1rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .playlist-item-info {
-                gap: 0.75rem;
-            }
-            
-            .playlist-item-icon {
-                font-size: 1.8rem;
-                min-width: 2.5rem;
-            }
-            
-            .playlist-item-name {
-                font-size: 0.95rem;
-            }
-            
-            .playlist-item-path {
-                font-size: 0.75rem;
-            }
-            
-            .music-player-info {
-                margin-bottom: 0.75rem;
-                gap: 0.75rem;
-            }
-            
-            .music-player-icon {
-                font-size: 2.2rem;
-            }
-            
-            .music-player-title {
-                font-size: 1rem;
-            }
-            
-            .music-player-artist {
-                font-size: 0.85rem;
-            }
-            
-            .music-volume-control {
-                margin-top: 0.75rem;
-                padding-top: 0.75rem;
             }
         }
         
@@ -1380,26 +1719,6 @@ function isAudioFile($filename) {
             .playlist-item-icon {
                 font-size: 1.5rem;
                 min-width: 2.5rem;
-            }
-            
-            .music-player {
-                padding: 0.75rem;
-            }
-            
-            .music-player-icon {
-                font-size: 2rem;
-            }
-            
-            .music-control-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1.1rem;
-            }
-            
-            .music-control-btn.primary {
-                width: 50px;
-                height: 50px;
-                font-size: 1.4rem;
             }
         }
         
@@ -2440,30 +2759,70 @@ function isAudioFile($filename) {
             }
             
             .header {
-                padding: 1rem;
+                padding: 0.75rem 1rem;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
                 border-radius: 0 0 1rem 1rem;
                 margin-bottom: 1rem;
+                min-height: auto;
             }
             
             .header h1 {
-                font-size: 1.3rem;
+                font-size: 1.1rem;
                 text-align: center;
                 color: white;
+                margin: 0;
+            }
+            
+            .header-title {
+                display: none; /* 移动端隐藏"文件管理器"文字 */
+            }
+            
+            .header-icon {
+                font-size: 1.1rem;
             }
             
             .header-actions {
                 justify-content: center;
-                margin-top: 0.75rem;
+                margin-top: 0.5rem;
+                gap: 0.5rem;
+                flex-wrap: wrap;
             }
             
-            .header-actions span {
+            .account-info {
                 background: rgba(255,255,255,0.2);
-                padding: 0.5rem 1rem;
+                padding: 0.4rem 0.8rem;
                 border-radius: 20px;
-                font-size: 0.85rem;
+                font-size: 0.75rem;
                 backdrop-filter: blur(10px);
+                order: 2;
+            }
+            
+            .btn-music {
+                width: 35px;
+                height: 35px;
+                background: rgba(255,255,255,0.2);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.3);
+                order: 1;
+            }
+            
+            .btn-music:hover {
+                background: rgba(255,255,255,0.3);
+            }
+            
+            .btn-music .music-count {
+                width: 16px;
+                height: 16px;
+                font-size: 0.65rem;
+                top: -3px;
+                right: -3px;
+            }
+            
+            .btn-secondary {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+                order: 3;
             }
             
             .header-actions .btn {
@@ -2792,9 +3151,13 @@ function isAudioFile($filename) {
 </head>
 <body>
     <div class="header">
-        <h1>📁 文件管理器</h1>
+        <h1><span class="header-icon">📁</span><span class="header-title">文件管理器</span></h1>
         <div class="header-actions">
-            <span>当前账户: <strong><?php echo htmlspecialchars($currentAccount['name']); ?></strong></span>
+            <button id="musicPlayerToggle" class="btn btn-music" title="音乐播放器">
+                <span class="music-icon">🎵</span>
+                <span class="music-count" id="musicCount" style="display: none;">0</span>
+            </button>
+            <span class="account-info">当前账户: <strong><?php echo htmlspecialchars($currentAccount['name']); ?></strong></span>
             <a href="index.php" class="btn btn-secondary">返回首页</a>
         </div>
     </div>
@@ -3244,6 +3607,76 @@ function isAudioFile($filename) {
         </div>
     </div>
 
+    <!-- 保存播放列表模态框 -->
+    <div id="savePlaylistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>保存播放列表</h3>
+                <span class="close" onclick="hideModal('savePlaylistModal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label for="playlist_name">播放列表名称</label>
+                <input type="text" id="playlist_name" placeholder="输入播放列表名称" required>
+                <small style="color: #718096; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                    留空将使用默认名称：播放列表_YYYYMMDDHHMM
+                </small>
+            </div>
+            <div class="form-group">
+                <label>当前播放列表</label>
+                <div style="background: #f7fafc; padding: 0.75rem; border-radius: 6px; border: 1px solid #e2e8f0; color: #4a5568; max-height: 200px; overflow-y: auto;">
+                    <div id="save_playlist_preview">没有音乐文件</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="hideModal('savePlaylistModal')" class="btn btn-secondary">取消</button>
+                <button type="button" onclick="saveCurrentPlaylist()" class="btn btn-primary">💾 保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载播放列表模态框 -->
+    <div id="loadPlaylistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>加载播放列表</h3>
+                <span class="close" onclick="hideModal('loadPlaylistModal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <button onclick="refreshPlaylistList()" class="btn btn-secondary btn-sm">🔄 刷新</button>
+                    <span style="color: #718096; font-size: 0.9rem;">从 web_PLAYLIST 文件夹加载</span>
+                </div>
+                <div id="playlist_list_container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    <div id="playlist_loading" style="text-align: center; padding: 2rem; color: #718096;">
+                        正在加载播放列表...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="hideModal('loadPlaylistModal')" class="btn btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重命名播放列表模态框 -->
+    <div id="renamePlaylistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>重命名播放列表</h3>
+                <span class="close" onclick="hideModal('renamePlaylistModal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label for="rename_playlist_name">新名称</label>
+                <input type="text" id="rename_playlist_name" required>
+                <input type="hidden" id="rename_playlist_path">
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="hideModal('renamePlaylistModal')" class="btn btn-secondary">取消</button>
+                <button type="button" onclick="confirmRenamePlaylist()" class="btn btn-primary">重命名</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 预览模态框 -->
     <div id="previewModal" class="modal preview-modal">
         <div class="modal-content" id="previewModalContent">
@@ -3304,10 +3737,12 @@ function isAudioFile($filename) {
         </div>
         
         <div class="playlist-controls">
-            <button class="btn btn-success btn-sm" onclick="playAll()">▶️ 播放全部</button>
-            <button class="btn btn-warning btn-sm" onclick="shufflePlaylist()">🔀 随机播放</button>
-            <button class="btn btn-secondary btn-sm" onclick="clearPlaylist()">🗑️ 清空列表</button>
-            <button class="btn btn-info btn-sm" onclick="togglePlayMode()">🔄 播放模式</button>
+            <button class="btn btn-success btn-sm" onclick="playAll()" title="播放全部">▶️</button>
+            <button class="btn btn-warning btn-sm" onclick="shufflePlaylist()" title="随机播放">🔀</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearPlaylist()" title="清空列表">🗑️</button>
+            <button class="btn btn-info btn-sm" onclick="togglePlayMode()" title="播放模式">🔄</button>
+            <button class="btn btn-primary btn-sm" onclick="showSavePlaylistModal()" title="保存列表">💾</button>
+            <button class="btn btn-secondary btn-sm" onclick="showLoadPlaylistModal()" title="加载列表">📂</button>
         </div>
         
         <div class="playlist-list" id="playlistList">
@@ -3747,6 +4182,77 @@ function isAudioFile($filename) {
                 this.updatePlaylistItems();
                 this.updatePlayerControls();
                 this.updatePlayModeIndicator();
+                this.updateMusicToggleButton();
+                
+                // 更新保存播放列表预览（如果模态框是打开的）
+                const saveModal = document.getElementById('savePlaylistModal');
+                if (saveModal && saveModal.style.display === 'block') {
+                    updateSavePlaylistPreview();
+                }
+            }
+            
+            updateMusicToggleButton() {
+                const musicToggle = document.getElementById('musicPlayerToggle');
+                const musicCount = document.getElementById('musicCount');
+                
+                if (musicToggle) {
+                    // 音乐播放器按钮始终显示，用于调出播放器
+                    musicToggle.style.display = 'flex';
+                    
+                    // 根据播放状态更新按钮样式
+                    if (this.isPlaying) {
+                        musicToggle.classList.add('playing');
+                    } else {
+                        musicToggle.classList.remove('playing');
+                    }
+                    
+                    // 更新歌曲数量徽章
+                    if (musicCount) {
+                        if (this.tracks.length > 0) {
+                            musicCount.textContent = this.tracks.length;
+                            musicCount.style.display = 'flex';
+                            musicToggle.title = `音乐播放器 (${this.tracks.length}首)`;
+                        } else {
+                            musicCount.style.display = 'none';
+                            musicToggle.title = '音乐播放器';
+                        }
+                    }
+                }
+            }
+            
+            togglePlaylistVisibility() {
+                const controlElement = document.getElementById('playlistControl');
+                if (controlElement) {
+                    const isVisible = controlElement.style.display === 'block' || 
+                                    getComputedStyle(controlElement).display === 'block';
+                    
+                    if (isVisible) {
+                        this.hidePlaylist();
+                    } else {
+                        this.showPlaylist();
+                    }
+                } else {
+                    // 如果播放器元素不存在或不可见，直接显示
+                    this.showPlaylist();
+                }
+            }
+            
+            showPlaylist() {
+                const controlElement = document.getElementById('playlistControl');
+                if (controlElement) {
+                    controlElement.style.display = 'block';
+                    // 滚动到播放列表位置
+                    setTimeout(() => {
+                        controlElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                }
+            }
+            
+            hidePlaylist() {
+                const controlElement = document.getElementById('playlistControl');
+                if (controlElement) {
+                    controlElement.style.display = 'none';
+                }
             }
 
             updatePlaylistCount() {
@@ -3940,6 +4446,196 @@ function isAudioFile($filename) {
                 }
             }
 
+            saveCurrentPlaylist() {
+                if (this.tracks.length === 0) {
+                    this.showMessage('播放列表为空，无法保存');
+                    return;
+                }
+
+                const playlistName = document.getElementById('playlist_name').value.trim();
+                const finalName = playlistName || this.generateDefaultPlaylistName();
+
+                const playlistData = {
+                    name: finalName,
+                    tracks: this.tracks.map(track => ({
+                        path: track.path,
+                        name: track.name,
+                        id: track.id
+                    })),
+                    created_at: new Date().toISOString(),
+                    account: '<?php echo htmlspecialchars($currentAccountKey); ?>',
+                    version: '1.0'
+                };
+
+                this.savePlaylistToWebDAV(playlistData);
+            }
+
+            generateDefaultPlaylistName() {
+                const now = new Date();
+                // 转换为北京时间 (UTC+8)
+                const beijingTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+                const year = beijingTime.getUTCFullYear();
+                const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+                const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+                const hours = String(beijingTime.getUTCHours()).padStart(2, '0');
+                const minutes = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+                
+                return `播放列表_${year}${month}${day}${hours}${minutes}`;
+            }
+
+            async savePlaylistToWebDAV(playlistData) {
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'save_playlist');
+                    formData.append('account', '<?php echo htmlspecialchars($currentAccountKey); ?>');
+                    formData.append('name', playlistData.name);
+                    formData.append('tracks', JSON.stringify(playlistData.tracks));
+
+                    const response = await fetch('playlist_api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showMessage(`播放列表 "${playlistData.name}" 保存成功`);
+                        hideModal('savePlaylistModal');
+                        document.getElementById('playlist_name').value = '';
+                    } else {
+                        throw new Error(result.message || '保存失败');
+                    }
+                } catch (error) {
+                    console.error('保存播放列表失败:', error);
+                    this.showMessage('保存失败：' + error.message);
+                }
+            }
+
+            async loadPlaylistsFromWebDAV() {
+                try {
+                    const response = await fetch(`playlist_api.php?action=list_playlists&account=${encodeURIComponent('<?php echo htmlspecialchars($currentAccountKey); ?>')}`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        return result.playlists;
+                    } else {
+                        throw new Error(result.message || '获取播放列表失败');
+                    }
+                } catch (error) {
+                    console.error('获取播放列表失败:', error);
+                    throw error;
+                }
+            }
+
+            async loadPlaylistFromWebDAV(filePath) {
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'load_playlist');
+                    formData.append('account', '<?php echo htmlspecialchars($currentAccountKey); ?>');
+                    formData.append('path', filePath);
+
+                    const response = await fetch('playlist_api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        return result.playlist;
+                    } else {
+                        throw new Error(result.message || '加载播放列表失败');
+                    }
+                } catch (error) {
+                    console.error('加载播放列表失败:', error);
+                    throw error;
+                }
+            }
+
+            async deletePlaylistFromWebDAV(filePath) {
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'delete_playlist');
+                    formData.append('account', '<?php echo htmlspecialchars($currentAccountKey); ?>');
+                    formData.append('path', filePath);
+
+                    const response = await fetch('playlist_api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        return true;
+                    } else {
+                        throw new Error(result.message || '删除播放列表失败');
+                    }
+                } catch (error) {
+                    console.error('删除播放列表失败:', error);
+                    throw error;
+                }
+            }
+
+            async renamePlaylistInWebDAV(filePath, newName) {
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'rename_playlist');
+                    formData.append('account', '<?php echo htmlspecialchars($currentAccountKey); ?>');
+                    formData.append('path', filePath);
+                    formData.append('new_name', newName);
+
+                    const response = await fetch('playlist_api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        return result;
+                    } else {
+                        throw new Error(result.message || '重命名播放列表失败');
+                    }
+                } catch (error) {
+                    console.error('重命名播放列表失败:', error);
+                    throw error;
+                }
+            }
+
+            replacePlaylistWith(playlistData) {
+                // 停止当前播放
+                this.stopCurrent();
+                
+                // 清空当前播放列表
+                this.tracks = [];
+                this.currentIndex = -1;
+                this.isPlaying = false;
+
+                // 加载新的播放列表
+                if (playlistData.tracks && playlistData.tracks.length > 0) {
+                    playlistData.tracks.forEach(track => {
+                        this.tracks.push({
+                            path: track.path,
+                            name: track.name,
+                            id: track.id || (Date.now() + Math.random())
+                        });
+                    });
+                }
+
+                // 更新界面
+                this.saveToStorage();
+                this.updateUI();
+                
+                if (this.tracks.length > 0) {
+                    this.showPlaylistControl();
+                    this.showMessage(`播放列表 "${playlistData.name}" 加载成功，共 ${this.tracks.length} 首歌曲`);
+                } else {
+                    this.hidePlaylistControl();
+                    this.showMessage('播放列表为空');
+                }
+            }
+
             formatTime(seconds) {
                 if (isNaN(seconds)) return '0:00';
                 const mins = Math.floor(seconds / 60);
@@ -3986,6 +4682,16 @@ function isAudioFile($filename) {
 
         // 初始化音乐播放列表
         const musicPlaylist = new MusicPlaylist();
+        
+        // 初始化音乐播放器按钮
+        document.addEventListener('DOMContentLoaded', function() {
+            const musicToggle = document.getElementById('musicPlayerToggle');
+            if (musicToggle) {
+                musicToggle.addEventListener('click', function() {
+                    musicPlaylist.togglePlaylistVisibility();
+                });
+            }
+        });
 
         // 书签管理类
         class BookmarkManager {
@@ -4367,6 +5073,192 @@ function isAudioFile($filename) {
             musicPlaylist.seekTo(percentage);
         }
 
+        function filterBookmarks() {
+            bookmarkManager.filterBookmarks();
+        }
+
+        // 播放列表保存和加载相关的全局函数
+        function showSavePlaylistModal() {
+            if (musicPlaylist.tracks.length === 0) {
+                musicPlaylist.showMessage('播放列表为空，无法保存');
+                return;
+            }
+
+            // 更新保存预览
+            updateSavePlaylistPreview();
+            
+            // 清空输入框
+            document.getElementById('playlist_name').value = '';
+            
+            showModal('savePlaylistModal');
+        }
+
+        function updateSavePlaylistPreview() {
+            const previewElement = document.getElementById('save_playlist_preview');
+            
+            if (musicPlaylist.tracks.length === 0) {
+                previewElement.innerHTML = '没有音乐文件';
+                return;
+            }
+
+            let html = `<div style="font-weight: 600; margin-bottom: 0.5rem; color: #4a5568;">共 ${musicPlaylist.tracks.length} 首歌曲:</div>`;
+            
+            musicPlaylist.tracks.forEach((track, index) => {
+                const isPlaying = index === musicPlaylist.currentIndex;
+                const escapedName = escapeHtml(track.name);
+                html += `
+                    <div style="padding: 0.25rem 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 0.5rem; ${isPlaying ? 'background: rgba(102, 126, 234, 0.1); border-radius: 4px; padding: 0.5rem;' : ''}">
+                        <span style="font-size: 0.8rem; opacity: 0.7; min-width: 2rem;">${index + 1}.</span>
+                        <span style="flex: 1; font-size: 0.85rem; ${isPlaying ? 'font-weight: 600; color: #667eea;' : ''}">${escapedName}</span>
+                        ${isPlaying ? '<span style="color: #667eea; font-size: 0.8rem;">♪ 正在播放</span>' : ''}
+                    </div>
+                `;
+            });
+            
+            previewElement.innerHTML = html;
+        }
+
+        function saveCurrentPlaylist() {
+            musicPlaylist.saveCurrentPlaylist();
+        }
+
+        function showLoadPlaylistModal() {
+            showModal('loadPlaylistModal');
+            refreshPlaylistList();
+        }
+
+        async function refreshPlaylistList() {
+            const loadingElement = document.getElementById('playlist_loading');
+            const containerElement = document.getElementById('playlist_list_container');
+            
+            loadingElement.style.display = 'block';
+            loadingElement.textContent = '正在加载播放列表...';
+            
+            try {
+                const playlists = await musicPlaylist.loadPlaylistsFromWebDAV();
+                
+                if (playlists.length === 0) {
+                    loadingElement.textContent = '没有找到播放列表文件';
+                    loadingElement.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: #718096;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🎵</div>
+                            <h4 style="margin-bottom: 0.5rem; color: #4a5568;">没有播放列表</h4>
+                            <p style="font-size: 0.9rem; line-height: 1.5;">
+                                还没有保存任何播放列表<br>
+                                创建播放列表后点击"💾 保存列表"按钮即可保存
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                playlists.forEach(playlist => {
+                    const createdDate = new Date(playlist.created_at);
+                    const timeAgo = getTimeAgo(createdDate);
+                    const escapedName = escapeHtml(playlist.name);
+                    const escapedPath = escapeHtml(playlist.path);
+                    
+                    html += `
+                        <div class="playlist-item" style="margin: 0; border-radius: 0; border-left: none; border-right: none; border-top: none;">
+                            <div class="playlist-item-info">
+                                <div class="playlist-item-icon">🎵</div>
+                                <div class="playlist-item-details">
+                                    <div class="playlist-item-name">${escapedName}</div>
+                                    <div class="playlist-item-path">${playlist.track_count} 首歌曲 • ${timeAgo}</div>
+                                </div>
+                                <div class="playlist-item-actions">
+                                    <button class="playlist-item-btn" onclick="loadSelectedPlaylist('${escapedPath}')" title="加载">📂</button>
+                                    <button class="playlist-item-btn" onclick="showRenamePlaylistModal('${escapedPath}', '${escapedName}')" title="重命名">✏️</button>
+                                    <button class="playlist-item-btn" onclick="deleteSelectedPlaylist('${escapedPath}', '${escapedName}')" title="删除">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                loadingElement.style.display = 'none';
+                containerElement.innerHTML = html;
+                
+            } catch (error) {
+                loadingElement.textContent = '加载失败：' + error.message;
+                loadingElement.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #e53e3e;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">⚠️</div>
+                        <h4 style="margin-bottom: 0.5rem; color: #742a2a;">加载失败</h4>
+                        <p style="font-size: 0.9rem; line-height: 1.5;">${error.message}</p>
+                        <button onclick="refreshPlaylistList()" class="btn btn-secondary btn-sm" style="margin-top: 1rem;">重试</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadSelectedPlaylist(filePath) {
+            try {
+                const playlist = await musicPlaylist.loadPlaylistFromWebDAV(filePath);
+                musicPlaylist.replacePlaylistWith(playlist);
+                hideModal('loadPlaylistModal');
+            } catch (error) {
+                musicPlaylist.showMessage('加载失败：' + error.message);
+            }
+        }
+
+        function showRenamePlaylistModal(filePath, currentName) {
+            document.getElementById('rename_playlist_path').value = filePath;
+            document.getElementById('rename_playlist_name').value = currentName;
+            hideModal('loadPlaylistModal');
+            showModal('renamePlaylistModal');
+        }
+
+        async function confirmRenamePlaylist() {
+            const filePath = document.getElementById('rename_playlist_path').value;
+            const newName = document.getElementById('rename_playlist_name').value.trim();
+            
+            if (!newName) {
+                alert('请输入新名称');
+                return;
+            }
+            
+            try {
+                await musicPlaylist.renamePlaylistInWebDAV(filePath, newName);
+                musicPlaylist.showMessage('播放列表重命名成功');
+                hideModal('renamePlaylistModal');
+                // 返回到加载列表页面并刷新
+                showModal('loadPlaylistModal');
+                refreshPlaylistList();
+            } catch (error) {
+                musicPlaylist.showMessage('重命名失败：' + error.message);
+            }
+        }
+
+        async function deleteSelectedPlaylist(filePath, playlistName) {
+            if (!confirm(`确定要删除播放列表"${playlistName}"吗？此操作不可撤销。`)) {
+                return;
+            }
+            
+            try {
+                await musicPlaylist.deletePlaylistFromWebDAV(filePath);
+                musicPlaylist.showMessage(`播放列表"${playlistName}"已删除`);
+                refreshPlaylistList(); // 刷新列表
+            } catch (error) {
+                musicPlaylist.showMessage('删除失败：' + error.message);
+            }
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return '刚刚';
+            if (minutes < 60) return `${minutes}分钟前`;
+            if (hours < 24) return `${hours}小时前`;
+            if (days < 30) return `${days}天前`;
+            return date.toLocaleDateString();
+        }
+
         // 书签相关的全局函数
         function showBookmarksPanel() {
             bookmarkManager.openBookmarks();
@@ -4655,6 +5547,13 @@ function isAudioFile($filename) {
             // 为移动端添加特殊类名以启用flex布局
             if (window.innerWidth <= 768) {
                 modal.classList.add('modal-show');
+            }
+            
+            // 特殊处理：如果是保存播放列表模态框，更新预览
+            if (modalId === 'savePlaylistModal') {
+                setTimeout(() => {
+                    updateSavePlaylistPreview();
+                }, 100);
             }
         }
 

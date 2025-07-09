@@ -469,23 +469,117 @@ try {
         
         /* 响应式设计 */
         @media (max-width: 768px) {
+            .header {
+                padding: 0.75rem 1rem;
+                flex-direction: column;
+                gap: 0.75rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            
+            .header h1 {
+                font-size: 1.25rem;
+                color: white;
+                text-align: center;
+                margin: 0;
+            }
+            
+            .header-info {
+                justify-content: center;
+                order: 2;
+            }
+            
+            .user-info {
+                color: rgba(255,255,255,0.9);
+                font-size: 0.8rem;
+                background: rgba(255,255,255,0.1);
+                padding: 0.3rem 0.8rem;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+            }
+            
+            .admin-badge {
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
+                font-size: 0.7rem;
+                padding: 0.2rem 0.6rem;
+            }
+            
+            .header-actions {
+                flex-wrap: wrap;
+                gap: 0.4rem;
+                justify-content: center;
+                order: 3;
+            }
+            
+            .btn {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+                border-radius: 15px;
+            }
+            
+            .btn-bookmark {
+                background: rgba(255,255,255,0.2);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.3);
+            }
+            
+            .btn-primary {
+                background: rgba(0,123,255,0.8);
+                backdrop-filter: blur(10px);
+            }
+            
+            .btn-warning {
+                background: rgba(255,193,7,0.9);
+                color: #212529;
+            }
+            
+            .btn-secondary {
+                background: rgba(108,117,125,0.8);
+                backdrop-filter: blur(10px);
+            }
+            
             .bookmarks-panel {
                 width: 100vw;
                 right: -100vw;
             }
             
+            body.bookmarks-open {
+                overflow: hidden;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+            
+            .account-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
             .header-actions {
-                flex-wrap: wrap;
-                gap: 0.5rem;
+                gap: 0.3rem;
             }
             
             .btn {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+                padding: 0.35rem 0.7rem;
             }
             
-            body.bookmarks-open {
-                overflow: hidden;
+            .user-info {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.6rem;
             }
         }
     </style>
