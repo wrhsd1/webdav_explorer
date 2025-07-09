@@ -88,6 +88,95 @@ if ($_POST) {
                         }
                     }
                     break;
+                    
+                case 'export_webdav':
+                    $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
+                    $exportData = [];
+                    foreach ($webdavConfigs as $config) {
+                        $exportData[] = [
+                            'account_key' => $config['account_key'],
+                            'account_name' => $config['account_name'],
+                            'host' => $config['host'],
+                            'username' => $config['username'],
+                            'password' => $config['password'], // 注意：密码也会被导出
+                            'path' => $config['path'],
+                            'exported_at' => date('Y-m-d H:i:s'),
+                            'exported_by' => Auth::getCurrentUsername()
+                        ];
+                    }
+                    
+                    $filename = 'webdav_configs_' . Auth::getCurrentUsername() . '_' . date('Ymd_His') . '.json';
+                    header('Content-Type: application/json');
+                    header('Content-Disposition: attachment; filename="' . $filename . '"');
+                    header('Content-Length: ' . strlen(json_encode($exportData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)));
+                    echo json_encode($exportData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                    exit;
+                    
+                case 'import_webdav':
+                    if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+                        $error = '请选择要导入的JSON文件';
+                    } else {
+                        $uploadedFile = $_FILES['import_file'];
+                        $fileContent = file_get_contents($uploadedFile['tmp_name']);
+                        
+                        try {
+                            $importData = json_decode($fileContent, true);
+                            if (json_last_error() !== JSON_ERROR_NONE) {
+                                throw new Exception('JSON文件格式错误');
+                            }
+                            
+                            if (!is_array($importData)) {
+                                throw new Exception('导入数据格式不正确');
+                            }
+                            
+                            $importedCount = 0;
+                            $skippedCount = 0;
+                            $duplicateKeys = [];
+                            
+                            foreach ($importData as $configData) {
+                                if (!isset($configData['account_key']) || !isset($configData['account_name']) || 
+                                    !isset($configData['host']) || !isset($configData['username'])) {
+                                    $skippedCount++;
+                                    continue;
+                                }
+                                
+                                // 检查账户标识是否已存在
+                                $existingConfig = $userManager->getUserWebdavConfig($currentUserId, $configData['account_key']);
+                                if ($existingConfig) {
+                                    $duplicateKeys[] = $configData['account_key'];
+                                    $skippedCount++;
+                                    continue;
+                                }
+                                
+                                try {
+                                    $userManager->addWebdavConfig(
+                                        $currentUserId,
+                                        $configData['account_key'],
+                                        $configData['account_name'],
+                                        $configData['host'],
+                                        $configData['username'],
+                                        $configData['password'] ?? '',
+                                        $configData['path'] ?? '/'
+                                    );
+                                    $importedCount++;
+                                } catch (Exception $e) {
+                                    $skippedCount++;
+                                }
+                            }
+                            
+                            $message = "导入完成！成功导入 {$importedCount} 个配置";
+                            if ($skippedCount > 0) {
+                                $message .= "，跳过 {$skippedCount} 个配置";
+                                if (!empty($duplicateKeys)) {
+                                    $message .= "（重复的账户标识：" . implode(', ', $duplicateKeys) . "）";
+                                }
+                            }
+                            
+                        } catch (Exception $e) {
+                            $error = '导入失败: ' . $e->getMessage();
+                        }
+                    }
+                    break;
             }
         }
     } catch (Exception $e) {
@@ -462,7 +551,21 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
         
         <!-- WebDAV账户管理 -->
         <div class="card">
-            <h2>我的WebDAV账户</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin-bottom: 0;">我的WebDAV账户</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <!-- 导出按钮 -->
+                    <?php if (!empty($webdavConfigs)): ?>
+                        <form method="POST" style="display: inline;">
+                            <input type="hidden" name="action" value="export_webdav">
+                            <button type="submit" class="btn btn-success" title="导出WebDAV配置">📥 导出配置</button>
+                        </form>
+                    <?php endif; ?>
+                    
+                    <!-- 导入按钮 -->
+                    <button onclick="showModal('importWebdavModal')" class="btn btn-primary" title="导入WebDAV配置">📤 导入配置</button>
+                </div>
+            </div>
             <?php if (empty($webdavConfigs)): ?>
                 <div class="no-configs">暂无WebDAV账户配置</div>
             <?php else: ?>
@@ -550,6 +653,43 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
         </div>
     </div>
 
+    <!-- 导入WebDAV配置模态框 -->
+    <div id="importWebdavModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>导入WebDAV配置</h3>
+                <span class="close" onclick="closeImportWebdavModal()">&times;</span>
+            </div>
+            
+            <form method="POST" id="importWebdavForm" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="import_webdav">
+                
+                <div class="form-group">
+                    <label for="import_file">选择JSON配置文件</label>
+                    <input type="file" id="import_file" name="import_file" accept=".json" required>
+                    <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 0.5rem;">
+                        请选择之前导出的JSON配置文件
+                    </small>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 1rem; border-radius: 5px; margin: 1rem 0; font-size: 0.9rem;">
+                    <strong>⚠️ 导入说明：</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem;">
+                        <li>只会导入不重复的账户标识</li>
+                        <li>已存在的账户标识将被跳过</li>
+                        <li>密码信息也会一同导入</li>
+                        <li>建议在导入前备份现有配置</li>
+                    </ul>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeImportWebdavModal()" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-primary">开始导入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function editWebdavConfig(configId, accountName, host, username, path) {
             document.getElementById('edit_config_id').value = configId;
@@ -566,11 +706,23 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
             document.getElementById('editWebdavModal').style.display = 'none';
         }
 
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeImportWebdavModal() {
+            document.getElementById('importWebdavModal').style.display = 'none';
+        }
+
         // 点击模态框外部关闭
         window.onclick = function(event) {
-            const modal = document.getElementById('editWebdavModal');
-            if (event.target === modal) {
+            const editModal = document.getElementById('editWebdavModal');
+            const importModal = document.getElementById('importWebdavModal');
+            
+            if (event.target === editModal) {
                 closeEditWebdavModal();
+            } else if (event.target === importModal) {
+                closeImportWebdavModal();
             }
         }
 
@@ -578,6 +730,7 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeEditWebdavModal();
+                closeImportWebdavModal();
             }
         });
         
