@@ -2972,7 +2972,7 @@ function isAudioFile($filename) {
                                     <button data-path="<?php echo htmlspecialchars($item['path']); ?>" 
                                             data-name="<?php echo htmlspecialchars($item['name']); ?>"
                                             onclick="addToPlaylist(this.dataset.path, this.dataset.name)" 
-                                            class="btn btn-success btn-sm" title="添加到播放列表">🎵</button>
+                                            class="btn btn-success btn-sm" title="添加到播放列表">➕</button>
                                 <?php endif; ?>
                                 <a href="download.php?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($item['path']); ?>" 
                                    class="btn btn-success btn-sm" title="下载">⬇️</a>
@@ -3059,7 +3059,7 @@ function isAudioFile($filename) {
                                 <?php if (isAudioFile($item['name'])): ?>
                                     <button onclick="addToPlaylist('<?php echo htmlspecialchars($item['path']); ?>', '<?php echo htmlspecialchars($item['name']); ?>')" 
                                             class="btn btn-success">
-                                        <span>🎵</span> 添加
+                                        <span>➕</span> 添加
                                     </button>
                                 <?php endif; ?>
                                 <a href="download.php?account=<?php echo urlencode($currentAccountKey); ?>&path=<?php echo urlencode($item['path']); ?>" 
@@ -3314,7 +3314,7 @@ function isAudioFile($filename) {
             <div class="playlist-empty" id="playlistEmpty">
                 <div class="playlist-empty-icon">🎵</div>
                 <h4>播放列表为空</h4>
-                <p>点击音乐文件旁边的 🎵 按钮将其添加到播放列表</p>
+                <p>点击音乐文件名或预览按钮开始播放，点击 ➕ 按钮只添加到播放列表</p>
             </div>
         </div>
         
@@ -3419,14 +3419,19 @@ function isAudioFile($filename) {
                 }
             }
 
-            addTrack(path, name) {
+            addTrack(path, name, autoPlay = true) {
                 // 检查是否已存在
                 const existingIndex = this.tracks.findIndex(track => track.path === path);
                 if (existingIndex !== -1) {
-                    // 如果已存在，移动到当前位置并播放
-                    this.currentIndex = existingIndex;
-                    this.playCurrentTrack();
-                    this.showMessage(`"${name}" 已在播放列表中，开始播放`);
+                    if (autoPlay) {
+                        // 如果已存在且需要自动播放，移动到当前位置并播放
+                        this.currentIndex = existingIndex;
+                        this.playCurrentTrack();
+                        this.showMessage(`"${name}" 已在播放列表中，开始播放`);
+                    } else {
+                        // 如果已存在但不自动播放，只显示提示
+                        this.showMessage(`"${name}" 已在播放列表中`);
+                    }
                     return;
                 }
 
@@ -3441,17 +3446,21 @@ function isAudioFile($filename) {
                 this.updateUI();
                 this.showPlaylistControl();
 
-                // 如果是第一首歌，自动开始播放
-                if (this.tracks.length === 1) {
-                    this.currentIndex = 0;
-                    this.playCurrentTrack();
+                if (autoPlay) {
+                    // 如果需要自动播放
+                    if (this.tracks.length === 1) {
+                        this.currentIndex = 0;
+                        this.playCurrentTrack();
+                    } else {
+                        // 如果不是第一首，播放新添加的歌曲
+                        this.currentIndex = this.tracks.length - 1;
+                        this.playCurrentTrack();
+                    }
+                    this.showMessage(`"${name}" 已添加到播放列表并开始播放`);
                 } else {
-                    // 如果不是第一首，询问是否立即播放
-                    this.currentIndex = this.tracks.length - 1;
-                    this.playCurrentTrack();
+                    // 如果不自动播放，只添加到列表
+                    this.showMessage(`"${name}" 已添加到播放列表`);
                 }
-
-                this.showMessage(`"${name}" 已添加到播放列表并开始播放`);
             }
 
             removeTrack(index) {
@@ -4298,13 +4307,11 @@ function isAudioFile($filename) {
             // 检查是否已在播放列表中
             const existingTrackIndex = musicPlaylist.tracks.findIndex(track => track.path === path);
             if (existingTrackIndex !== -1) {
-                // 如果已存在，直接播放并打开播放列表
-                musicPlaylist.playTrack(existingTrackIndex);
-                musicPlaylist.openPlaylist();
-                musicPlaylist.showMessage(`正在播放 "${name}"`);
+                // 如果已存在，只显示消息，不自动播放
+                musicPlaylist.showMessage(`"${name}" 已在播放列表中`);
             } else {
-                // 如果不存在，添加到播放列表
-                musicPlaylist.addTrack(path, name);
+                // 如果不存在，添加到播放列表但不自动播放
+                musicPlaylist.addTrack(path, name, false);
             }
         }
 
@@ -4800,14 +4807,14 @@ function isAudioFile($filename) {
                 // 对于音频文件，直接使用播放列表功能，不显示预览窗口
                 hideModal('previewModal');
                 
-                // 添加到播放列表并播放
+                // 添加到播放列表并播放（预览功能需要自动播放）
                 const existingTrackIndex = musicPlaylist.tracks.findIndex(track => track.path === path);
                 if (existingTrackIndex !== -1) {
                     // 如果已存在，直接播放
                     musicPlaylist.playTrack(existingTrackIndex);
                 } else {
-                    // 如果不存在，添加并播放
-                    musicPlaylist.addTrack(path, name);
+                    // 如果不存在，添加并播放（传入true表示自动播放）
+                    musicPlaylist.addTrack(path, name, true);
                 }
                 
                 // 打开播放列表面板
