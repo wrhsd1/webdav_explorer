@@ -269,8 +269,8 @@ $webdavConfigs = $userManager->getUserWebdavConfigs(Auth::getCurrentUserId());
             
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('list')">📥 列表浏览</div>
-                <div class="tab" onclick="switchTab('mkdir')">� 新建文件夹</div>
-                <div class="tab" onclick="switchTab('upload')">� 上传文件</div>
+                <div class="tab" onclick="switchTab('mkdir')">📁 新建文件夹</div>
+                <div class="tab" onclick="switchTab('upload')">📤 上传文件</div>
             </div>
             
             <!-- 列表浏览 -->
@@ -450,7 +450,7 @@ $webdavConfigs = $userManager->getUserWebdavConfigs(Auth::getCurrentUserId());
         
         function fillCurrentPath(target) {
             if (!currentPath || !currentAccount) {
-                alert('请先浏览一个目录以获取当前路径');
+                alert('请先使用📥 列表浏览功能，浏览一个目录以获取当前路径');
                 return;
             }
             
