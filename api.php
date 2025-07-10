@@ -201,10 +201,27 @@ if ($method === 'POST') {
         $fileContent = '';
         
         // 检查是否有上传的文件
-        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-            $uploadedFile = $_FILES['file'];
-            $fileName = $uploadedFile['name'];
-            $fileContent = file_get_contents($uploadedFile['tmp_name']);
+        if (isset($_FILES['file'])) {
+            if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                $uploadedFile = $_FILES['file'];
+                $fileName = $uploadedFile['name'];
+                $fileContent = file_get_contents($uploadedFile['tmp_name']);
+            } else {
+                // 处理上传错误
+                $errorMessages = [
+                    UPLOAD_ERR_INI_SIZE => '上传的文件超过了 php.ini 中 upload_max_filesize 的限制（' . ini_get('upload_max_filesize') . '）',
+                    UPLOAD_ERR_FORM_SIZE => '上传的文件超过了 HTML 表单中 MAX_FILE_SIZE 的限制',
+                    UPLOAD_ERR_PARTIAL => '文件只有部分被上传',
+                    UPLOAD_ERR_NO_FILE => '没有文件被上传',
+                    UPLOAD_ERR_NO_TMP_DIR => '找不到临时文件夹',
+                    UPLOAD_ERR_CANT_WRITE => '文件写入失败',
+                    UPLOAD_ERR_EXTENSION => '文件上传因 PHP 扩展而停止'
+                ];
+                $errorMessage = isset($errorMessages[$_FILES['file']['error']]) 
+                    ? $errorMessages[$_FILES['file']['error']] 
+                    : '未知的上传错误（代码：' . $_FILES['file']['error'] . '）';
+                jsonResponse(false, null, '文件上传失败: ' . $errorMessage, 400, $user);
+            }
         }
         // 检查是否有文件URL
         elseif (!empty($_POST['file_url'])) {
