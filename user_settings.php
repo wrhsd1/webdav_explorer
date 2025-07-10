@@ -567,7 +567,7 @@ $webdavConfigs = $userManager->getUserWebdavConfigs($currentUserId);
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">更新API密钥</button>
-                <a href="api_test.php" class="btn btn-success" style="margin-left: 0.5rem;">🧪 测试API</a>
+                <a href="api_test.php" class="btn btn-success" style="margin-left: 0.5rem;">🧪 API测试工具</a>
             </form>
         </div>
         

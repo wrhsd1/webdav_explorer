@@ -260,6 +260,7 @@
                 <li><a href="#authentication">🔐 认证方式</a></li>
                 <li><a href="#upload-api">📤 上传API</a></li>
                 <li><a href="#download-api">📥 下载/列表API</a></li>
+                <li><a href="#mkdir-api">📁 新建文件夹API</a></li>
                 <li><a href="#error-codes">⚠️ 错误代码</a></li>
                 <li><a href="#examples">💡 使用示例</a></li>
             </ul>
@@ -273,15 +274,37 @@
                 <li>上传文件到WebDAV服务器</li>
                 <li>从URL下载文件并上传到WebDAV</li>
                 <li>获取目录和文件列表</li>
+                <li>创建新的文件夹</li>
                 <li>获取文件的直链地址</li>
+            </ul>
+            
+            <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                <h4 style="color: #1976d2; margin-bottom: 0.5rem;">🧪 快速测试</h4>
+                <p style="margin: 0; color: #424242;">
+                    想要快速体验API功能？访问 
+                    <a href="api_test.php" style="color: #1976d2; text-decoration: none; font-weight: 500;">🧪 API测试工具</a>
+                    ，无需编写代码即可测试所有API功能：
+                </p>
+                <ul style="margin: 0.5rem 0 0 2rem; color: #424242;">
+                    <li>📥 列表浏览：可视化目录导航</li>
+                    <li>📁 新建文件夹：快速创建目录结构</li>
+                    <li>📤 文件上传：支持本地文件和URL下载</li>
+                    <li>🔄 智能刷新：操作后自动更新显示</li>
+                </ul>
+            </div>
+            
+            <h3>API接口列表</h3>
+            <ul style="margin: 1rem 0 0 2rem;">
+                <li><strong>GET /api.php</strong> - 获取文件列表</li>
+                <li><strong>POST /api.php</strong> - 上传文件</li>
+                <li><strong>POST /mkdir_api.php</strong> - 新建文件夹</li>
             </ul>
             
             <h3>基础信息</h3>
             <ul style="margin: 1rem 0 0 2rem;">
-                <li><strong>API基地址:</strong> <code>/api.php</code></li>
                 <li><strong>返回格式:</strong> JSON</li>
                 <li><strong>编码:</strong> UTF-8</li>
-                <li><strong>请求方法:</strong> GET (列表/下载), POST (上传)</li>
+                <li><strong>认证方式:</strong> API密钥</li>
             </ul>
         </div>
         
@@ -453,6 +476,88 @@
             </div>
         </div>
         
+        <!-- 新建文件夹API -->
+        <div class="card" id="mkdir-api">
+            <h2>📁 新建文件夹API</h2>
+            
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span style="font-weight: 600;">/mkdir_api.php</span>
+                <div class="endpoint-url">POST /mkdir_api.php</div>
+                
+                <p><strong>功能:</strong> 在WebDAV存储中创建新的文件夹，支持递归创建多级目录。</p>
+                
+                <div class="params">
+                    <h4>请求参数</h4>
+                    
+                    <div class="param">
+                        <span class="param-name">apikey</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">必填</span>
+                        <div class="param-desc">您的API密钥，格式为 "用户名_密钥后缀"</div>
+                    </div>
+                    
+                    <div class="param">
+                        <span class="param-name">webdav_account</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">必填</span>
+                        <div class="param-desc">WebDAV账户标识符</div>
+                    </div>
+                    
+                    <div class="param">
+                        <span class="param-name">dir_path</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">可选*</span>
+                        <div class="param-desc">父目录路径或完整目录路径。默认为根目录 "/"</div>
+                    </div>
+                    
+                    <div class="param">
+                        <span class="param-name">dir_name</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">可选*</span>
+                        <div class="param-desc">要创建的文件夹名称。*dir_path和dir_name至少需要提供一个</div>
+                    </div>
+                    
+                    <div class="param">
+                        <span class="param-name">recursive</span>
+                        <span class="param-type">string</span>
+                        <span class="param-required">可选</span>
+                        <div class="param-desc">是否递归创建父目录。可选值: "true", "false"。默认为 "true"</div>
+                    </div>
+                </div>
+                
+                <div class="response">
+                    <h4>成功响应 (201 Created)</h4>
+                    <div class="code">{
+    "success": true,
+    "message": "目录创建成功",
+    "data": {
+        "dir_path": "/documents/new_project",
+        "dir_name": "new_project",
+        "parent_path": "/documents",
+        "webdav_account": "account1",
+        "create_method": "recursive",
+        "recursive": true
+    },
+    "timestamp": "2025-07-10 15:30:45"
+}</div>
+                </div>
+                
+                <div class="response">
+                    <h4>目录已存在 (409 Conflict)</h4>
+                    <div class="code">{
+    "success": false,
+    "message": "目录已存在",
+    "data": {
+        "dir_path": "/documents/existing_folder",
+        "exists": true
+    },
+    "timestamp": "2025-07-10 15:30:45"
+}</div>
+                </div>
+            </div>
+        </div>
+        
         <!-- 错误代码 -->
         <div class="card" id="error-codes">
             <h2>⚠️ 错误代码</h2>
@@ -526,6 +631,33 @@
             </div>
             
             <div class="example">
+                <h4>新建文件夹 (cURL)</h4>
+                <div class="code">curl -X POST "https://yourdomain.com/mkdir_api.php" \
+     -d "apikey=myuser_abc123456" \
+     -d "webdav_account=account1" \
+     -d "dir_path=/documents" \
+     -d "dir_name=new_project"</div>
+            </div>
+            
+            <div class="example">
+                <h4>新建文件夹 (cURL)</h4>
+                <div class="code">curl -X POST "https://yourdomain.com/mkdir_api.php" \
+     -d "apikey=myuser_abc123456" \
+     -d "webdav_account=account1" \
+     -d "dir_path=/documents" \
+     -d "dir_name=new_project"</div>
+            </div>
+            
+            <div class="example">
+                <h4>递归创建多级目录 (cURL)</h4>
+                <div class="code">curl -X POST "https://yourdomain.com/mkdir_api.php" \
+     -d "apikey=myuser_abc123456" \
+     -d "webdav_account=account1" \
+     -d "dir_path=/projects/2025/webapp" \
+     -d "recursive=true"</div>
+            </div>
+            
+            <div class="example">
                 <h4>JavaScript 示例</h4>
                 <div class="code">// 上传文件
 const formData = new FormData();
@@ -555,6 +687,26 @@ fetch('/api.php?apikey=myuser_abc123456&webdav_account=account1&file_path=/')
         data.data.items.forEach(item => {
             console.log(item.name, item.is_directory ? '(目录)' : '(文件)');
         });
+    }
+});
+
+// 新建文件夹
+const mkdirData = new FormData();
+mkdirData.append('apikey', 'myuser_abc123456');
+mkdirData.append('webdav_account', 'account1');
+mkdirData.append('dir_path', '/documents');
+mkdirData.append('dir_name', 'new_folder');
+
+fetch('/mkdir_api.php', {
+    method: 'POST',
+    body: mkdirData
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        console.log('文件夹创建成功:', data.data.dir_path);
+    } else {
+        console.error('创建失败:', data.message);
     }
 });</div>
             </div>

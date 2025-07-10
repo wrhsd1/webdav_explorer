@@ -48,7 +48,25 @@
 - ✅ 文件包含transfer.php直链
 - ✅ 包含文件大小、修改时间等元信息
 
-### 5. 直链支持
+### 5. 新建文件夹API功能
+**接口：** `POST /mkdir_api.php`
+
+**参数：**
+- `apikey` (必填): API密钥
+- `webdav_account` (必填): WebDAV账户标识
+- `dir_path` (可选): 父目录路径，默认为根目录
+- `dir_name` (可选): 要创建的文件夹名称
+- `recursive` (可选): 是否递归创建父目录，默认为true
+
+**功能特性：**
+- ✅ 支持单级目录创建
+- ✅ 支持递归创建多级目录结构
+- ✅ 智能路径处理，支持两种指定方式
+- ✅ 目录名称合法性验证
+- ✅ 目录重复性检查
+- ✅ 详细的创建结果反馈
+
+### 6. 直链支持
 - ✅ 修改了transfer.php支持API密钥验证
 - ✅ 支持会话和API密钥两种访问方式
 - ✅ 保持与现有功能的兼容性
@@ -63,11 +81,11 @@
 ### 7. 用户界面增强
 - ✅ 个人设置页面添加API密钥管理
 - ✅ 创建API文档页面 (`/api_docs.php`)
-- ✅ 创建API测试工具 (`/api_test.php`)
+- ✅ 创建综合API测试工具 (`/api_test.php`) - 包含列表浏览、新建文件夹、文件上传功能
 - ✅ 在首页和设置页面添加API功能入口
 
 ### 8. 错误处理和日志
-- ✅ 完整的错误代码体系（400, 401, 404, 405, 500）
+- ✅ 完整的错误代码体系（400, 401, 404, 405, 409, 500）
 - ✅ 统一的JSON响应格式
 - ✅ API访问日志记录（保存在data/api_access.log）
 - ✅ 详细的错误信息返回
@@ -97,12 +115,29 @@ curl -X POST "https://yourdomain.com/api.php" \
      -d "file_url=https://example.com/image.jpg"
 ```
 
-### 3. 获取文件列表示例
+### 3. 新建文件夹示例
+```bash
+# 在指定目录下创建文件夹
+curl -X POST "https://yourdomain.com/mkdir_api.php" \
+     -d "apikey=username_apikey123" \
+     -d "webdav_account=account1" \
+     -d "dir_path=/documents" \
+     -d "dir_name=new_project"
+
+# 递归创建多级目录
+curl -X POST "https://yourdomain.com/mkdir_api.php" \
+     -d "apikey=username_apikey123" \
+     -d "webdav_account=account1" \
+     -d "dir_path=/projects/2025/webapp" \
+     -d "recursive=true"
+```
+
+### 4. 获取文件列表示例
 ```bash
 curl "https://yourdomain.com/api.php?apikey=username_apikey123&webdav_account=account1&file_path=/"
 ```
 
-### 4. JavaScript使用示例
+### 5. JavaScript使用示例
 ```javascript
 // 上传文件
 const formData = new FormData();
@@ -121,15 +156,29 @@ fetch('/api.php', {
 fetch('/api.php?apikey=username_apikey123&webdav_account=account1&file_path=/')
     .then(response => response.json())
     .then(data => console.log(data));
+
+// 新建文件夹
+const mkdirData = new FormData();
+mkdirData.append('apikey', 'username_apikey123');
+mkdirData.append('webdav_account', 'account1');
+mkdirData.append('dir_path', '/documents');
+mkdirData.append('dir_name', 'new_folder');
+
+fetch('/mkdir_api.php', {
+    method: 'POST',
+    body: mkdirData
+}).then(response => response.json())
+  .then(data => console.log(data));
 ```
 
 ## 文件结构
 
 ```
 /
-├── api.php                 # API主入口文件
+├── api.php                 # API主入口文件（上传/列表）
+├── mkdir_api.php          # 新建文件夹API
 ├── api_docs.php           # API文档页面
-├── api_test.php           # API测试工具
+├── api_test.php           # 综合API测试工具（列表浏览、新建文件夹、文件上传）
 ├── user_settings.php      # 用户设置页面（已更新）
 ├── transfer.php           # 文件传输页面（已更新支持API）
 ├── includes/
